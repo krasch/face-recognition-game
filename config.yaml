@@ -1,0 +1,17 @@
+camera:
+  capture_width: 1280
+  capture_height: 720
+  flip: 0
+  zoom: 1.00
+  framerate: 1
+
+display:
+  display_width: 1280
+  display_height: 720
+  fullscreen: false
+
+model:
+  face_detection_model: "HOG"
+  face_detection_input_width: 1280 /4
+
+

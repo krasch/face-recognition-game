@@ -1,0 +1,4 @@
+input_dir: data
+logging:
+    file: output.log
+    level: 4x

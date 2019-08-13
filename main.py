@@ -1,40 +1,20 @@
 from contextlib import contextmanager
-import time
 import queue
 
 import cv2
-import dlib
-import numpy as np
-
-from camera import CameraThread
-from recognition import RecognitionThread
+import yaml
+import quickargs
 
 
-# CAMERA SETTINGS
-CAPTURE_WIDTH = 1280
-CAPTURE_HEIGHT = 720
-FLIP = 0
-ZOOM = 1.00
-FRAMERATE = 15
-
-# SCREEN SETTINGS
-# todo check screen ratio when fullscreen selected
-DISPLAY_WIDTH = 1280
-DISPLAY_HEIGHT = 720
-FULLSIZE=False
-
-# MODEL SETTINGS
-FACE_DETECTION_MODEL = "HOG" # CNN
-FACE_DETECTION_INPUT_WIDTH = 1280/4
-
-
-
+from recognition.camera import init_camera
+from recognition.recognition import init_recognition
+from recognition.types import ResultTypes, Result, TaskTypes, Task
 
 
 @contextmanager
-def init_display(fullsize):
+def init_display(config):
     name = "window"
-    if fullsize:
+    if config["display"]["fullscreen"]:
         cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     else:
@@ -43,57 +23,19 @@ def init_display(fullsize):
     try:
         yield name
     finally:
-        cv2.destroyWindow(name)          
+        cv2.destroyWindow(name)
 
 
-def init_face_detector_hog():
-    # todo scale
-    detector = dlib.get_frontal_face_detector()
-    
-    def run(frame):
-        small_frame = cv2.resize(frame, (0, 0), fx=SCALE, fy=SCALE)
-        return detector(small_frame[:, :, ::-1])
+def read_queue_until_quit(q):
+    while True:
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-    return run
-
-
-def init_face_cropper():
-    landmark_model = dlib.shape_predictor("models/face_cropping/shape_predictor_5_face_landmarks.dat")
-
-    def run(frame, face):
-        shape = landmark_model(frame[:, :, ::-1], face) 
-        return dlib.get_face_chip(frame, shape)[:, :, ::-1] # todo 96
-
-    return run
-
-
-def init_feature_extractor():
-    feature_model = cv2.dnn.readNetFromTorch("models/feature_extraction/nn4.small2.v1.t7")
-
-    def run(face):
-        blob = cv2.dnn.blobFromImage(face, 1.0/255, (96,96), swapRB=False, crop=False) # todo resize should not be necessary
-        feature_model.setInput(blob)
-        return feature_model.forward()
-
-    return run
-
-
-def init_face_matching():
-    num_existing = 10
-    face_database = list(np.random.rand(num_existing, 128))
-
-    def run(face):
-        # todo proper init
-        if len(face_database) == num_existing:
-            face_database.append(face)
-        distances = [np.linalg.norm(face-saved_face) for saved_face in face_database]
-        print(distances)
-        matches = [d for d in distances if d<1.0]
-        return len(matches) > 0
-
-    return run
-
-
+        try:
+            yield q.get(True, 1.0/15.0)
+        except queue.Empty:
+            continue
+"""
 #@profile
 def main():
     detect_faces = init_face_detector_cnn()
@@ -124,41 +66,49 @@ def main():
                     cv2.rectangle(frame, (face.left(), face.top()), (face.right(), face.bottom()), color, 2)
 
                 cv2.imshow(display_name, frame)
+"""
 
 
-def main2():
-    work = queue.Queue()
+def show_frame(display, frame, face_locations):
+    if frame is None:
+        return
+
+    frame = frame.copy()
+
+    if face_locations:
+        for face in face_locations:
+            cv2.rectangle(frame, (face.left(), face.top()), (face.right(), face.bottom()), (0, 0, 255), 2)
+
+    cv2.imshow(display, frame)
+
+
+def run(config):
+    tasks = queue.Queue()
     results = queue.Queue()
 
-    recognition = RecognitionThread(work, results)
-    recognition.start()
-    time.sleep(3)
+    frame = None
+    faces = None
 
-    camera = CameraThread(results)
-    camera.start()
+    with init_display(config) as display, init_camera(config, results), init_recognition(config, tasks, results):
+        for result in read_queue_until_quit(results):
 
-    while True:
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+            if result.type == ResultTypes.CAMERA_IMAGE:
+                frame = result.data
+                tasks.put(Task(TaskTypes.DETECT_FACES, result.data))
 
-        try:
-            t, data = results.get(True, 1.0/15.0)
-            if t == "image":
-                cv2.imshow("test", data)
-                work.put(("image", data))
+            elif result.type == ResultTypes.FACE_DETECTIONS:
+                original_frame, faces = result.data
+                for face in faces:
+                    tasks.put(Task(TaskTypes.RECOGNIZE_PERSON, (original_frame, face)))
+
             else:
-                print(data)
-        except queue.Empty:
-            continue
+                raise NotImplementedError()
 
-        #result = results.get()
-        #print(result.shape)
-
-        #cv2.imshow("test", frame)
-
-    camera.join()
-    recognition.join()
+            show_frame(display, frame, faces)
 
 
-main2()
+if __name__ == "__main__":
+    with open("config.yaml") as f:
+        configuration = yaml.load(f, Loader=quickargs.YAMLArgsLoader)
+    run(configuration)
 

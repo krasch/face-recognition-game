@@ -6,6 +6,8 @@ import time
 
 import cv2
 
+from recognition.types import ResultTypes, Result
+
 # CAMERA SETTINGS
 CAPTURE_WIDTH = 1280
 CAPTURE_HEIGHT = 720
@@ -17,7 +19,6 @@ FRAMERATE = 15
 # todo check screen ratio when fullscreen selected
 DISPLAY_WIDTH = 1280
 DISPLAY_HEIGHT = 720
-FULLSIZE = False
 
 
 def get_jetson_gstreamer_source():
@@ -45,7 +46,8 @@ def open_stream():
     if platform.machine() == "aarch64":
         video_capture = cv2.VideoCapture(get_jetson_gstreamer_source(), cv2.CAP_GSTREAMER)
     else:
-        video_capture = cv2.VideoCapture(0)
+        # video_capture = cv2.VideoCapture(0)
+        video_capture = cv2.VideoCapture("tests/data/%d.png")
 
     try:
         yield video_capture
@@ -54,7 +56,7 @@ def open_stream():
 
 
 class CameraThread(threading.Thread):
-    def __init__(self, output: Queue):
+    def __init__(self, config, output: Queue):
         super(CameraThread, self).__init__()
         self.output = output
         self.stoprequest = threading.Event()
@@ -62,9 +64,21 @@ class CameraThread(threading.Thread):
     def run(self):
         with open_stream() as stream:
             while not self.stoprequest.isSet():
-                ret, image = stream.read()
-                self.output.put(("image", image))
+                has_image, image = stream.read()
+                if has_image:
+                    self.output.put(Result(ResultTypes.CAMERA_IMAGE, image))
 
     def join(self, timeout=None):
         self.stoprequest.set()
         super(CameraThread, self).join(timeout)
+
+
+@contextmanager
+def init_camera(config, results_queue):
+    camera = CameraThread(config, results_queue)
+
+    try:
+        camera.start()
+        yield camera
+    finally:
+        camera.join()
