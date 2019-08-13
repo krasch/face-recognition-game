@@ -2,11 +2,10 @@ from contextlib import contextmanager
 import platform
 import threading
 from queue import Queue
-import time
 
 import cv2
 
-from recognition.types import ResultTypes, Result
+from recognition.results import CameraImage
 
 # CAMERA SETTINGS
 CAPTURE_WIDTH = 1280
@@ -56,17 +55,19 @@ def open_stream():
 
 
 class CameraThread(threading.Thread):
-    def __init__(self, config, output: Queue):
+    def __init__(self, config, results_queue: Queue):
         super(CameraThread, self).__init__()
-        self.output = output
+        self.results_queue = results_queue
         self.stoprequest = threading.Event()
 
     def run(self):
         with open_stream() as stream:
+            counter = 0
             while not self.stoprequest.isSet():
                 has_image, image = stream.read()
                 if has_image:
-                    self.output.put(Result(ResultTypes.CAMERA_IMAGE, image))
+                    self.results_queue.put(CameraImage(counter, image))
+                    counter = (counter + 1) % 10000
 
     def join(self, timeout=None):
         self.stoprequest.set()

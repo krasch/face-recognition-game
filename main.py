@@ -8,7 +8,8 @@ import quickargs
 
 from recognition.camera import init_camera
 from recognition.recognition import init_recognition
-from recognition.types import ResultTypes, Result, TaskTypes, Task
+from recognition.tasks import FaceDetection, FaceRecognition
+from recognition.results import CameraImage, DetectedFaces
 
 
 @contextmanager
@@ -35,76 +36,63 @@ def read_queue_until_quit(q):
             yield q.get(True, 1.0/15.0)
         except queue.Empty:
             continue
-"""
-#@profile
-def main():
-    detect_faces = init_face_detector_cnn()
-    crop_faces = init_face_cropper()
-    extract_features = init_feature_extractor()
-    match_faces = init_face_matching()
-
-    time.sleep(3)  # to get model loading to finish
-
-    with init_display(FULLSIZE) as display_name:
-        with open_stream() as stream:
-            for i, frame in enumerate(read_stream_until_quit(stream)):  # todo can enumerate overflow?
-                cv2.imshow(display_name, frame)
-                print(frame.shape)
-
-                face_locations = detect_faces(frame)
-                if not face_locations:
-                    continue
-
-                for face in face_locations:
-                    cropped = crop_faces(frame, face)  # openface has its own alignment, seems to use 96 points
-                    features = extract_features(cropped)[0]
-                    matched = match_faces(features)
-                    if matched:
-                       color = (0, 0, 255)
-                    else:
-                       color = (255, 0, 0)
-                    cv2.rectangle(frame, (face.left(), face.top()), (face.right(), face.bottom()), color, 2)
-
-                cv2.imshow(display_name, frame)
-"""
 
 
-def show_frame(display, frame, face_locations):
-    if frame is None:
+def show_frame(display, image, faces):
+    if image is None:
         return
 
-    frame = frame.copy()
+    frame = image.data.copy()
 
-    if face_locations:
-        for face in face_locations:
+    if faces:
+        for face in faces.face_locations:
             cv2.rectangle(frame, (face.left(), face.top()), (face.right(), face.bottom()), (0, 0, 255), 2)
 
     cv2.imshow(display, frame)
 
 
 def run(config):
+    TTL = 4
+
     tasks = queue.Queue()
     results = queue.Queue()
 
-    frame = None
+    image = None
     faces = None
+    persons = None
 
     with init_display(config) as display, init_camera(config, results), init_recognition(config, tasks, results):
+        # initialization: wait for the very first image from the camera
         for result in read_queue_until_quit(results):
+            if isinstance(result, CameraImage):
+                image = result
+                break
 
-            if result.type == ResultTypes.CAMERA_IMAGE:
-                frame = result.data
-                tasks.put(Task(TaskTypes.DETECT_FACES, result.data))
+        # main loop
+        for result in read_queue_until_quit(results):
+            if result.is_outdated(image.id, TTL):
+                continue
 
-            elif result.type == ResultTypes.FACE_DETECTIONS:
-                original_frame, faces = result.data
-                for face in faces:
-                    tasks.put(Task(TaskTypes.RECOGNIZE_PERSON, (original_frame, face)))
+            if isinstance(result, CameraImage):
+                image = result
+                tasks.put(FaceDetection(image))
+                import time
+                time.sleep(1)
+
+            elif isinstance(result, DetectedFaces):
+                faces = result
+                tasks.put(FaceRecognition(result.original_image, result.face_locations))
 
             else:
                 raise NotImplementedError()
 
-            show_frame(display, frame, faces)
+            if faces and faces.is_outdated(image.id, TTL):
+                faces = None
+            if persons and persons.is_outdated(image.id, TTL):
+                persons = None
+
+            show_frame(display, image, faces)
+
 
 
 if __name__ == "__main__":

@@ -1,12 +1,4 @@
-def init_face_detector_hog():
-    # todo scale
-    detector = dlib.get_frontal_face_detector()
 
-    def run(frame):
-        small_frame = cv2.resize(frame, (0, 0), fx=SCALE, fy=SCALE)
-        return detector(small_frame[:, :, ::-1])
-
-    return run
 
 
 def init_face_cropper():

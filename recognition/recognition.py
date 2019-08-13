@@ -2,27 +2,9 @@ import threading
 import queue
 from contextlib import contextmanager
 
-import dlib
-import cv2
-
-from recognition.types import TaskTypes, ResultTypes, Result
-
-
-# todo freezes if negative locations -> should be no negative locations
-def init_face_detector_cnn():
-    detector = dlib.cnn_face_detection_model_v1("models/face_detection/mmod_human_face_detector.dat")
-    # scale = FACE_DETECTION_INPUT_WIDTH / DISPLAY_WIDTH
-    scale = 0.25
-
-    def unscale(result):
-        return dlib.rectangle(int(result.left()*1.0/scale), int(result.top()*1.0/scale),
-                              int(result.right()*1.0/scale), int(result.bottom()*1.0/scale))
-
-    def run(frame):
-        small_frame = cv2.resize(frame, (0, 0), fx=scale, fy=scale)
-        return [unscale(r.rect) for r in detector(small_frame, 0)]  # todo check confidence
-
-    return run
+from recognition.tasks import FaceDetection, FaceRecognition
+from recognition.results import DetectedFaces
+from recognition.models.face_detection import init_face_detector
 
 
 class RecognitionThread(threading.Thread):
@@ -32,17 +14,17 @@ class RecognitionThread(threading.Thread):
         self.result_queue = result_queue
         self.stop_request = threading.Event()
 
-        self.face_detector = init_face_detector_cnn()
+        self.face_detector = init_face_detector(config)
 
     def run(self):
         for task in self._read_queue_until_quit():
 
-            if task.type == TaskTypes.DETECT_FACES:
-                result = self.face_detector(task.data)
-                self.result_queue.put(Result(ResultTypes.FACE_DETECTIONS, (task.data, result)))
+            if isinstance(task, FaceDetection):
+                face_locations = self.face_detector(task.image.data)
+                self.result_queue.put(DetectedFaces(task.image, face_locations))
 
-            elif task.type == TaskTypes.RECOGNIZE_PERSON:
-                image, face = task.data
+            elif isinstance(task, FaceRecognition):
+                pass
 
             else:
                 raise NotImplementedError()

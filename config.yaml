@@ -10,8 +10,10 @@ display:
   display_height: 720
   fullscreen: false
 
-model:
-  face_detection_model: "HOG"
-  face_detection_input_width: 1280 /4
+models:
+  directory: "models"
+  face_detection:
+    model: "HOG"
+    scale: 0.25
 
 
