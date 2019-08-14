@@ -1,19 +1,32 @@
 camera:
-  capture_width: 1280
-  capture_height: 720
+  # following camera parameters only used when running on jetson
+  width: 1280
+  height: 720
   flip: 0
   zoom: 1.00
   framerate: 1
 
-display:
-  display_width: 1280
-  display_height: 720
-  fullscreen: false
+recognition:
+  # every x frames, recognition should be run
+  framerate: 4
+  # recognition results older than x frames will be discarded
+  results_max_age: 4
 
-models:
-  directory: "models"
-  face_detection:
-    model: "HOG"
-    scale: 0.25
+  models:
+     directory: "models"
+     face_detection:
+       model: "HOG"
+       scale: 0.25
+
+  database:
+     location: "faces.txt"
+     backup_frequency: 10000  # every x frames
+
+display:
+  width: 1280
+  height: 720
+  fullscreen: false
+  face_info_max_age: 4
+
 
 
