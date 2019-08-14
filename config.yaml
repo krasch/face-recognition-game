@@ -1,0 +1,34 @@
+camera:
+  # following camera parameters only used when running on jetson
+  width: 1280
+  height: 720
+  flip: 0
+  zoom: 1.00
+  framerate: 15
+
+# prerecorded_frames: frames/%d.png
+
+recognition:
+  # every x frames, recognition should be run
+  framerate: 10
+  # recognition results older than x frames will be discarded
+  results_max_age: 20
+
+  models:
+     directory: "models"
+     stack: "CNN+dlibcrop+openface"
+     face_detection:
+       scale: 0.5
+
+  database:
+     location: "faces.txt"
+     backup_frequency: 10000  # every x frames
+
+display:
+  width: 1280
+  height: 720
+  fullscreen: false
+  face_info_max_age: 4
+
+
+
