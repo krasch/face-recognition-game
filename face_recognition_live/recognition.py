@@ -2,6 +2,7 @@ import threading
 import queue
 from contextlib import contextmanager
 from collections import namedtuple
+from pathlib import Path
 
 from face_recognition_live.tasks import RecognizeFaces, BackupFaceDatabase
 from face_recognition_live.results import Faces
@@ -14,6 +15,19 @@ from face_recognition_live.models.face_matching import FaceDatabase
 Face = namedtuple("Face", ["bounding_box", "match"])
 
 
+def init_model_stack(config):
+    model_dir = Path(config["recognition"]["models"]["directory"])
+
+    if config["recognition"]["models"]["stack"] == "CNN+dlibcrop+openface":
+        scale = config["recognition"]["models"]["face_detection"]["scale"]
+        face_detector = init_face_detector(model_dir, "CNN", scale)
+        face_cropper = init_face_cropper(model_dir)
+        feature_extractor = init_feature_extractor(model_dir)
+        return face_detector, face_cropper, feature_extractor
+    else:
+        raise NotImplementedError()
+
+
 class RecognitionThread(threading.Thread):
     def __init__(self, config, task_queue, result_queue):
         super(RecognitionThread, self).__init__()
@@ -22,9 +36,7 @@ class RecognitionThread(threading.Thread):
         self.stop_request = threading.Event()
 
         # load all the models
-        self.face_detector = init_face_detector(config)
-        self.face_cropper = init_face_cropper(config)
-        self.feature_extractor = init_feature_extractor(config)
+        self.face_detector, self.face_cropper, self.feature_extractor = init_model_stack(config)
         self.face_database = FaceDatabase()
 
     def run(self):

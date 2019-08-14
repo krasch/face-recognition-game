@@ -14,8 +14,8 @@ recognition:
 
   models:
      directory: "models"
+     stack: "CNN+dlibcrop+openface"
      face_detection:
-       model: "HOG"
        scale: 0.25
 
   database:
