@@ -45,8 +45,8 @@ def open_stream(config):
     if running_on_jetson():
         video_capture = cv2.VideoCapture(get_jetson_gstreamer_source(config), cv2.CAP_GSTREAMER)
     else:
-        # video_capture = cv2.VideoCapture(0)
-        video_capture = cv2.VideoCapture("tests/data/%d.png")
+        video_capture = cv2.VideoCapture(0)
+        video_capture = cv2.VideoCapture("frames/%d.png")
 
     try:
         yield video_capture

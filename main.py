@@ -48,14 +48,14 @@ def run(config):
 
             if isinstance(result, CameraImage):
                 image = result
-                #import time
-                #time.sleep(1)
 
                 if image.id % DATABASE_BACKUP_FREQUENCY == 0:
                     tasks.put(BackupFaceDatabase())
 
                 if image.id % RECOGNITION_FREQUENCY == 0:
                     tasks.put(RecognizeFaces(image))
+
+                cv2.imwrite("frames/{}.png".format(image.id), image.data)
 
             elif isinstance(result, Faces):
                 if not result.is_outdated(image.id, RESULTS_MAX_AGE):
@@ -68,6 +68,7 @@ def run(config):
                 faces = None
 
             show_frame(display, image, faces)
+
 
 
 if __name__ == "__main__":

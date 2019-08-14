@@ -1,13 +1,21 @@
-from unittest import mock
+from pathlib import Path
+
+import cv2
+
 from face_recognition_live.models.face_detection import init_face_detector
+from tests.util import assert_face_detections_equal
 
 
-def test_face_partially_outside_camera_window():
-    config = mock.Mock()
-    init_face_detector(config)
-    assert False
-    #config = {"recognition": {"models": {"directory": "models"},
-    #                          "face_detection": {"model": "cnn"}}}
-    #detector = init_face_detector("cnn")
+# todo avoid loading models
+def test_results_scale_invariant():
+    image = cv2.imread("tests/data/1.png")
 
+    detector_fullsize = init_face_detector(Path("models"), "CNN", 1.0)
+    detector_halfsize = init_face_detector(Path("models"), "CNN", 0.5)
 
+    faces_fullsize = detector_fullsize(image)
+    faces_halfsize = detector_halfsize(image)
+
+    assert_face_detections_equal(faces_fullsize, faces_halfsize)
+
+# todo test not returning faces outside image
