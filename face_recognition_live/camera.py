@@ -11,7 +11,7 @@ from face_recognition_live.results import CameraImage
 
 def get_jetson_gstreamer_source(config):
     capture_width = config["camera"]["width"]
-    capture_height = config["camera"]["weight"]
+    capture_height = config["camera"]["height"]
     display_width = config["display"]["width"]
     display_height = config["display"]["height"]
     flip = config["camera"]["flip"]
@@ -20,7 +20,7 @@ def get_jetson_gstreamer_source(config):
 
     # calculate crop window
     # somewhat unintuitively gstreamer calculates it such that the cropped window still has capture_height*capture_width
-    assert config[""] >= 1
+    assert zoom >= 1
     crop_left = int((capture_width - capture_width/zoom)/2.0)
     crop_right = capture_width - crop_left
     crop_top = int((capture_height - capture_height/zoom)/2.0)
