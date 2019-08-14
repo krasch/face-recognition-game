@@ -2,6 +2,10 @@ from contextlib import contextmanager
 
 import cv2
 
+# BGR
+RED = (0, 0, 255)
+GREEN = (0, 255, 0)
+
 
 @contextmanager
 def init_display(config):
@@ -26,7 +30,13 @@ def show_frame(display, image, faces):
 
     if faces:
         for face in faces.persons:
+            if face.match:
+                color = GREEN
+                frame[30:180, 0:0 + 150] = face.match.image
+            else:
+                color = RED
+
             box = face.bounding_box
-            cv2.rectangle(frame, (box.left(), box.top()), (box.right(), box.bottom()), (0, 0, 255), 2)
+            cv2.rectangle(frame, (box.left(), box.top()), (box.right(), box.bottom()), color, 2)
 
     cv2.imshow(display, frame)

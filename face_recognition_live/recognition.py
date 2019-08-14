@@ -3,6 +3,7 @@ import queue
 from contextlib import contextmanager
 from collections import namedtuple
 from pathlib import Path
+import time
 
 from face_recognition_live.tasks import RecognizeFaces, BackupFaceDatabase
 from face_recognition_live.results import Faces
@@ -45,12 +46,13 @@ class RecognitionThread(threading.Thread):
             if isinstance(task, RecognizeFaces):
                 # todo break this down into several tasks?
                 face_locations = self.face_detector(task.image.data)
+                print(face_locations)
 
                 if face_locations:
 
                     crops = self.face_cropper(task.image.data, face_locations)
                     features = self.feature_extractor(crops)
-                    matches = self.face_database.match_all(features)
+                    matches = self.face_database.match_all(face_locations, crops, features)
 
                     faces = [Face(location, match) for location, match in zip(face_locations, matches)]
                     self.result_queue.put(Faces(task.image.id, faces))
@@ -79,6 +81,7 @@ class RecognitionThread(threading.Thread):
 @contextmanager
 def init_recognition(config, work_queue, results_queue):
     recognition = RecognitionThread(config, work_queue, results_queue)
+    time.sleep(3)
 
     try:
         recognition.start()

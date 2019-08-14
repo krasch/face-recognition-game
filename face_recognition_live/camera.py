@@ -2,6 +2,7 @@ from contextlib import contextmanager
 import platform
 import threading
 from queue import Queue
+import time
 
 import cv2
 
@@ -40,13 +41,28 @@ def running_on_jetson():
     return platform.machine() == "aarch64"
 
 
+class SlowerStream:
+    def __init__(self, fast_stream, frames_per_second):
+        self.fast_stream = fast_stream
+        self.framerate = 1.0 / frames_per_second
+
+    def read(self):
+        time.sleep(self.framerate)
+        has_image, image = self.fast_stream.read()
+        return has_image, image
+
+    def release(self):
+        self.fast_stream.release()
+
+
 @contextmanager
 def open_stream(config):
-    if running_on_jetson():
+    if "prerecorded_frames" in config:
+        video_capture = SlowerStream(cv2.VideoCapture(config["prerecorded_frames"]), 15)
+    elif running_on_jetson():
         video_capture = cv2.VideoCapture(get_jetson_gstreamer_source(config), cv2.CAP_GSTREAMER)
     else:
         video_capture = cv2.VideoCapture(0)
-        video_capture = cv2.VideoCapture("frames/%d.png")
 
     try:
         yield video_capture

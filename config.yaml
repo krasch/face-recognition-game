@@ -4,19 +4,21 @@ camera:
   height: 720
   flip: 0
   zoom: 1.00
-  framerate: 1
+  framerate: 15
+
+# prerecorded_frames: frames/%d.png
 
 recognition:
   # every x frames, recognition should be run
-  framerate: 4
+  framerate: 10
   # recognition results older than x frames will be discarded
-  results_max_age: 4
+  results_max_age: 20
 
   models:
      directory: "models"
      stack: "CNN+dlibcrop+openface"
      face_detection:
-       scale: 0.25
+       scale: 0.5
 
   database:
      location: "faces.txt"

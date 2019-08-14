@@ -55,8 +55,6 @@ def run(config):
                 if image.id % RECOGNITION_FREQUENCY == 0:
                     tasks.put(RecognizeFaces(image))
 
-                cv2.imwrite("frames/{}.png".format(image.id), image.data)
-
             elif isinstance(result, Faces):
                 if not result.is_outdated(image.id, RESULTS_MAX_AGE):
                     faces = result
@@ -68,7 +66,6 @@ def run(config):
                 faces = None
 
             show_frame(display, image, faces)
-
 
 
 if __name__ == "__main__":
