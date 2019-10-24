@@ -2,31 +2,14 @@ import threading
 import queue
 from contextlib import contextmanager
 from collections import namedtuple
-from pathlib import Path
 import time
 
-from face_recognition_live.tasks import RecognizeFaces, BackupFaceDatabase
-from face_recognition_live.results import Faces
-from face_recognition_live.models.face_detection import init_face_detector
-from face_recognition_live.models.face_cropping import init_face_cropper
-from face_recognition_live.models.feature_extraction import init_feature_extractor
-from face_recognition_live.models.face_matching import FaceDatabase
-
+from face_recognition_live.events.tasks import RecognizeFaces, BackupFaceDatabase
+from face_recognition_live.events.results import Faces
+from face_recognition_live.database import FaceDatabase
+from face_recognition_live.models import init_model_stack
 
 Face = namedtuple("Face", ["bounding_box", "match"])
-
-
-def init_model_stack(config):
-    model_dir = Path(config["recognition"]["models"]["directory"])
-
-    if config["recognition"]["models"]["stack"] == "CNN+dlibcrop+openface":
-        scale = config["recognition"]["models"]["face_detection"]["scale"]
-        face_detector = init_face_detector(model_dir, "CNN", scale)
-        face_cropper = init_face_cropper(model_dir)
-        feature_extractor = init_feature_extractor(model_dir)
-        return face_detector, face_cropper, feature_extractor
-    else:
-        raise NotImplementedError()
 
 
 class RecognitionThread(threading.Thread):
@@ -38,7 +21,7 @@ class RecognitionThread(threading.Thread):
 
         # load all the models
         self.face_detector, self.face_cropper, self.feature_extractor = init_model_stack(config)
-        self.face_database = FaceDatabase()
+        self.face_database = FaceDatabase(config["recognition"]["database"]["location"])
 
     def run(self):
         for task in self._read_queue_until_quit():
@@ -46,7 +29,6 @@ class RecognitionThread(threading.Thread):
             if isinstance(task, RecognizeFaces):
                 # todo break this down into several tasks?
                 face_locations = self.face_detector(task.image.data)
-                print(face_locations)
 
                 if face_locations:
 
@@ -61,7 +43,7 @@ class RecognitionThread(threading.Thread):
                     self.result_queue.put(Faces(task.image.id, []))
 
             elif isinstance(task, BackupFaceDatabase):
-                print("Should backup face database")  # todo
+                self.face_database.store()
 
             else:
                 raise NotImplementedError()

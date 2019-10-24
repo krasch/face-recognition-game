@@ -1,44 +1,27 @@
-from collections import namedtuple
-import datetime
-
 import numpy as np
+from enum import Enum
 
 
-StoredFace = namedtuple("StoredFace", ["timestamp", "features", "image"])
+class MATCH_TYPE(Enum):
+    MATCH = 1
+    LIKELY_NO_MATCH = 2
+    DEFINITELY_NO_MATCH = 3
 
 
-class FaceDatabase:
-    def __init__(self):
-        self.faces = []
+def find_best_match(features, stored_faces):
+    if len(stored_faces) == 0:
+        return MATCH_TYPE.DEFINITELY_NO_MATCH, None
 
-    def is_empty(self):
-        return len(self.faces) == 0
+    distances = np.array([np.linalg.norm(features - saved_face.features) for saved_face in stored_faces])
+    best_match = np.argmin(distances)
 
-    def add(self, features, image):
-        timestamp = datetime.datetime.now()
-        self.faces.append(StoredFace(timestamp, features, image))
+    if distances[best_match] < 0.6:
+        return MATCH_TYPE.MATCH, stored_faces[best_match]
+    elif distances[best_match] < 2.0:
+        return MATCH_TYPE.DEFINITELY_NO_MATCH, None
+    else:
+        return MATCH_TYPE.LIKELY_NO_MATCH, None
 
-    def is_frontal(self, location):
-        return True
 
-    def match(self, location, crop, features):
-        if self.is_empty():
-            if self.is_frontal(None):
-                self.add(features, crop)
-            return None
 
-        distances = np.array([np.linalg.norm(features - saved_face.features) for saved_face in self.faces])
-        best_match = np.argmin(distances)
 
-        if distances[best_match] < 0.6:
-            return self.faces[best_match]
-        else:
-            if self.is_frontal(None) and distances[best_match] > 2.0:
-                self.add(features, crop)
-            return None
-    
-    def match_all(self, locations, crops, features):
-        return [self.match(l, c, f) for l, c, f in zip(locations, crops, features)]
-
-    def store(self):
-        pass

@@ -4,7 +4,6 @@ import dlib
 import cv2
 
 
-# todo freezes if negative locations -> filter out negative locations
 def init_face_detector(model_dir: Path, model_type, scale):
     if model_type == "HOG":
         detector = init_face_detector_hog()

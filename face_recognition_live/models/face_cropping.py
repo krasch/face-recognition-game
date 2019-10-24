@@ -16,7 +16,7 @@ def angle(landmarks):
 
 
 def init_face_cropper(model_dir: Path):
-    model_location = model_dir / "face_cropping" / "shape_predictor_5_face_landmarks.dat"
+    model_location = model_dir / "face_cropping" / "shape_predictor_68_face_landmarks.dat"
 
     landmark_model = dlib.shape_predictor(str(model_location))  # todo follow openface alignment
 

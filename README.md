@@ -13,3 +13,8 @@ sh download_models.sh
 ```
 python main.py
 ```
+
+
+# Notes
+
+CNN face detection does not properly run in thread on my laptop

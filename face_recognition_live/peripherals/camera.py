@@ -6,7 +6,7 @@ import time
 
 import cv2
 
-from face_recognition_live.results import CameraImage
+from face_recognition_live.events.results import CameraImage
 
 
 def get_jetson_gstreamer_source(config):
@@ -58,7 +58,7 @@ class SlowerStream:
 @contextmanager
 def open_stream(config):
     if "prerecorded_frames" in config:
-        video_capture = SlowerStream(cv2.VideoCapture(config["prerecorded_frames"]), 15)
+        video_capture = SlowerStream(cv2.VideoCapture(config["prerecorded_frames"]), 10)
     elif running_on_jetson():
         video_capture = cv2.VideoCapture(get_jetson_gstreamer_source(config), cv2.CAP_GSTREAMER)
     else:

@@ -6,9 +6,9 @@ class CameraImage:
 
 
 class Faces:
-    def __init__(self, image_id, persons):
+    def __init__(self, image_id, faces):
         self.image_id = image_id
-        self.persons = persons
+        self.faces = faces
 
     def is_outdated(self, current_id, time_to_live):
         age = current_id - self.image_id

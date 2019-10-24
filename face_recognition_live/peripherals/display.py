@@ -29,7 +29,10 @@ def show_frame(display, image, faces):
     frame = image.data.copy()
 
     if faces:
-        for face in faces.persons:
+        print("hallo")
+        for face in faces.faces:
+            print(face)
+            print(face.match)
             if face.match:
                 color = GREEN
                 frame[30:180, 0:0 + 150] = face.match.image

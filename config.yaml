@@ -6,23 +6,23 @@ camera:
   zoom: 1.00
   framerate: 15
 
-# prerecorded_frames: frames/%d.png
+prerecorded_frames: tests/frames/%d.png
 
 recognition:
   # every x frames, recognition should be run
-  framerate: 10
+  framerate: 3
   # recognition results older than x frames will be discarded
   results_max_age: 20
 
   models:
      directory: "models"
-     stack: "CNN+dlibcrop+openface"
+     stack: "HOG+dlibcrop+openface"   # do not use CNN on laptop
      face_detection:
        scale: 0.5
 
   database:
-     location: "faces.txt"
-     backup_frequency: 10000  # every x frames
+     location: "database.pkl"
+     backup_frequency: 100  # every x frames
 
 display:
   width: 1280
