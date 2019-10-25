@@ -2,6 +2,8 @@ from contextlib import contextmanager
 
 import cv2
 
+from face_recognition_live.models.landmarks import DLIB68_FACE_LOCATIONS
+
 # BGR
 RED = (0, 0, 255)
 GREEN = (0, 255, 0)
@@ -22,24 +24,55 @@ def init_display(config):
         cv2.destroyWindow(name)
 
 
-def show_frame(display, image, faces):
+def add_bounding_box(frame, face):
+    if face.match:
+        color = GREEN
+    else:
+        color = RED
+
+    box = face.bounding_box
+    cv2.rectangle(frame, (box.left(), box.top()), (box.right(), box.bottom()), color, 2)
+
+
+def add_landmarks(frame, face):
+    for landmark in DLIB68_FACE_LOCATIONS:
+        location = face.landmarks.parts()[landmark.value].x, face.landmarks.parts()[landmark.value].y
+        cv2.circle(frame, location, 3, (255, 255, 255), 0)
+
+
+def add_match(frame, face):
+    if face.match:
+        frame[30:180, 0:0 + 150] = face.match.image
+
+
+def add_is_frontal_debug(frame, face):
+    if "frontal" not in face.debug:
+        return
+
+    left, right, top, bottom = face.debug["frontal"]
+
+    if face.frontal:
+        color = GREEN
+    else:
+        color = RED
+
+    cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
+
+
+def show_frame(display, image, recognition_result):
     if image is None:
         return
 
     frame = image.data.copy()
 
-    if faces:
-        print("hallo")
-        for face in faces.faces:
-            print(face)
-            print(face.match)
-            if face.match:
-                color = GREEN
-                frame[30:180, 0:0 + 150] = face.match.image
-            else:
-                color = RED
+    if recognition_result:
+        for face in recognition_result.faces:
+            add_bounding_box(frame, face)
 
-            box = face.bounding_box
-            cv2.rectangle(frame, (box.left(), box.top()), (box.right(), box.bottom()), color, 2)
+            # debug mode
+            add_landmarks(frame, face)
+            add_match(frame, face)
+            add_is_frontal_debug(frame, face)
 
-    cv2.imshow(display, frame)
+            # cv2.putText(frame, str(arrow["nose"][0] < arrow["mouth_right"][0]), (200, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), lineType=cv2.LINE_AA)
+        cv2.imshow(display, frame)

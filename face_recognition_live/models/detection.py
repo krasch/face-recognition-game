@@ -1,13 +1,19 @@
 from pathlib import Path
+from enum import Enum
 
 import dlib
 import cv2
 
 
-def init_face_detector(model_dir: Path, model_type, scale):
-    if model_type == "HOG":
+class DETECTION_MODEL(Enum):
+    HOG = 1
+    CNN = 2
+
+
+def init_face_detector(model_type: DETECTION_MODEL, model_dir: Path, scale):
+    if model_type == DETECTION_MODEL.HOG:
         detector = init_face_detector_hog()
-    elif model_type == "CNN":
+    elif model_type == DETECTION_MODEL.CNN:
         detector = init_face_detector_cnn(model_dir)
     else:
         raise NotImplementedError()

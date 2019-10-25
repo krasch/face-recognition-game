@@ -9,7 +9,7 @@ from face_recognition_live.peripherals.camera import init_camera
 from face_recognition_live.peripherals.display import init_display, show_frame
 from face_recognition_live.recognition import init_recognition
 from face_recognition_live.events.tasks import RecognizeFaces, BackupFaceDatabase
-from face_recognition_live.events.results import CameraImage, Faces
+from face_recognition_live.events.results import CameraImage, RecognitionResult
 
 
 def read_queue_until_quit(q):
@@ -55,7 +55,7 @@ def run(config):
                 if image.id % RECOGNITION_FREQUENCY == 0:
                     tasks.put(RecognizeFaces(image))
 
-            elif isinstance(result, Faces):
+            elif isinstance(result, RecognitionResult):
                 if not result.is_outdated(image.id, RESULTS_MAX_AGE):
                     faces = result
 

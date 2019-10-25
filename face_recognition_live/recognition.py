@@ -1,15 +1,15 @@
 import threading
 import queue
 from contextlib import contextmanager
-from collections import namedtuple
 import time
 
-from face_recognition_live.events.tasks import RecognizeFaces, BackupFaceDatabase
-from face_recognition_live.events.results import Faces
+import numpy as np
+
+from face_recognition_live.events.tasks import *
+from face_recognition_live.events.results import *
 from face_recognition_live.database import FaceDatabase
 from face_recognition_live.models import init_model_stack
-
-Face = namedtuple("Face", ["bounding_box", "match"])
+from face_recognition_live.face import Face
 
 
 class RecognitionThread(threading.Thread):
@@ -19,28 +19,32 @@ class RecognitionThread(threading.Thread):
         self.result_queue = result_queue
         self.stop_request = threading.Event()
 
-        # load all the models
-        self.face_detector, self.face_cropper, self.feature_extractor = init_model_stack(config)
+        self.models = init_model_stack(config)
         self.face_database = FaceDatabase(config["recognition"]["database"]["location"])
 
     def run(self):
         for task in self._read_queue_until_quit():
 
             if isinstance(task, RecognizeFaces):
-                # todo break this down into several tasks?
-                face_locations = self.face_detector(task.image.data)
+                bounding_boxes = self.models.detect_faces(task.image.data)
+                faces = [Face(bounding_box) for bounding_box in bounding_boxes]
 
-                if face_locations:
+                # todo parallelize?
+                for face in faces:
+                    face.landmarks = self.models.find_landmarks(task.image.data, face.bounding_box)
+                    face.frontal, face.debug["frontal"] = self.models.is_frontal(task.image.data, face.bounding_box, face.landmarks)
+                    face.crop = self.models.crop(task.image.data, face.landmarks)
 
-                    crops = self.face_cropper(task.image.data, face_locations)
-                    features = self.feature_extractor(crops)
-                    matches = self.face_database.match_all(face_locations, crops, features)
+                # do all faces at same time, much faster
+                all_features = self.models.extract_features(np.array([face.crop for face in faces]))
+                for face, features in zip(faces, all_features):
+                    face.features = features
 
-                    faces = [Face(location, match) for location, match in zip(face_locations, matches)]
-                    self.result_queue.put(Faces(task.image.id, faces))
+                # todo parallelize?
+                for face in faces:
+                    face.match = self.face_database.match(face.crop, face.features, face.frontal)
 
-                else:
-                    self.result_queue.put(Faces(task.image.id, []))
+                self.result_queue.put(RecognitionResult(task.image.id, faces))
 
             elif isinstance(task, BackupFaceDatabase):
                 self.face_database.store()

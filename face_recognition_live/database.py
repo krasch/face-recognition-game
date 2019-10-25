@@ -4,7 +4,7 @@ import pickle
 from pathlib import Path
 
 
-from face_recognition_live.models.face_matching import find_best_match, MATCH_TYPE
+from face_recognition_live.models.matching import find_best_match, MATCH_TYPE
 
 StoredFace = namedtuple("StoredFace", ["timestamp", "features", "image"])
 
@@ -22,12 +22,8 @@ class FaceDatabase:
         timestamp = datetime.datetime.now()
         self.faces.append(StoredFace(timestamp, features, image))
 
-    def is_frontal(self, location):
-        return True
-
-    def match(self, location, crop, features):
+    def match(self, crop, features, is_frontal):
         match_type, matched_face = find_best_match(features, self.faces)
-        print(match_type)
 
         if match_type == MATCH_TYPE.MATCH:
             return matched_face
@@ -38,14 +34,10 @@ class FaceDatabase:
 
         # not near any known faces, can safely add to database
         elif match_type == MATCH_TYPE.DEFINITELY_NO_MATCH:
-            if self.is_frontal(None):
+            if is_frontal:
+                print("Adding face to database")
                 self.add(features, crop)
             return None
-
-    def match_all(self, locations, crops, features):
-        matches = [self.match(l, c, f) for l, c, f in zip(locations, crops, features)]
-        matches = [m for m in matches if m is not None]
-        return matches
 
     def store(self):
         # only keep 1000 newest people

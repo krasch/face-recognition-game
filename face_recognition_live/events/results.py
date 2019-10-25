@@ -5,7 +5,7 @@ class CameraImage:
         self.data = image
 
 
-class Faces:
+class RecognitionResult:
     def __init__(self, image_id, faces):
         self.image_id = image_id
         self.faces = faces

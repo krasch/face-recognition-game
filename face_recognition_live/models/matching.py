@@ -14,10 +14,11 @@ def find_best_match(features, stored_faces):
 
     distances = np.array([np.linalg.norm(features - saved_face.features) for saved_face in stored_faces])
     best_match = np.argmin(distances)
+    print(distances)
 
     if distances[best_match] < 0.6:
         return MATCH_TYPE.MATCH, stored_faces[best_match]
-    elif distances[best_match] < 2.0:
+    elif distances[best_match] > 2.0:
         return MATCH_TYPE.DEFINITELY_NO_MATCH, None
     else:
         return MATCH_TYPE.LIKELY_NO_MATCH, None
