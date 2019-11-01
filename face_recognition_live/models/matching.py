@@ -18,7 +18,7 @@ def find_best_match(features, stored_faces):
 
     if distances[best_match] < 0.6:
         return MATCH_TYPE.MATCH, stored_faces[best_match]
-    elif distances[best_match] > 2.0:
+    elif distances[best_match] > 0.6:
         return MATCH_TYPE.DEFINITELY_NO_MATCH, None
     else:
         return MATCH_TYPE.LIKELY_NO_MATCH, None

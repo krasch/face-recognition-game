@@ -8,8 +8,8 @@ import quickargs
 from face_recognition_live.peripherals.camera import init_camera
 from face_recognition_live.peripherals.display import init_display, show_frame
 from face_recognition_live.recognition import init_recognition
-from face_recognition_live.events.tasks import RecognizeFaces, BackupFaceDatabase
-from face_recognition_live.events.results import CameraImage, RecognitionResult
+from face_recognition_live.events.tasks import *
+from face_recognition_live.events.results import *
 
 
 def read_queue_until_quit(q):
@@ -46,6 +46,9 @@ def run(config):
         # main loop
         for result in read_queue_until_quit(results):
 
+            if result.is_outdated(image.id, RESULTS_MAX_AGE):
+                continue
+
             if isinstance(result, CameraImage):
                 image = result
 
@@ -53,11 +56,19 @@ def run(config):
                     tasks.put(BackupFaceDatabase())
 
                 if image.id % RECOGNITION_FREQUENCY == 0:
-                    tasks.put(RecognizeFaces(image))
+                    tasks.put(DetectFaces(image))
+
+            elif isinstance(result, DetectionResult):
+                tasks.put(CropFaces(result.image, result.faces))
+
+            elif isinstance(result, CroppingResult):
+                tasks.put(ExtractFeatures(result.image, result.faces))
+
+            elif isinstance(result, FeatureExtractionResult):
+                tasks.put(RecognizePeople(result.image, result.faces))
 
             elif isinstance(result, RecognitionResult):
-                if not result.is_outdated(image.id, RESULTS_MAX_AGE):
-                    faces = result
+                faces = result
 
             else:
                 raise NotImplementedError()

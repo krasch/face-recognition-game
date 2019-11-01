@@ -2,6 +2,7 @@ import threading
 import queue
 from contextlib import contextmanager
 import time
+from abc import abstractmethod
 
 import numpy as np
 
@@ -12,45 +13,21 @@ from face_recognition_live.models import init_model_stack
 from face_recognition_live.face import Face
 
 
-class RecognitionThread(threading.Thread):
-    def __init__(self, config, task_queue, result_queue):
-        super(RecognitionThread, self).__init__()
+class WorkerThread(threading.Thread):
+    def __init__(self, task_queue, result_queue):
+        super(WorkerThread, self).__init__()
         self.task_queue = task_queue
         self.result_queue = result_queue
         self.stop_request = threading.Event()
 
-        self.models = init_model_stack(config)
-        self.face_database = FaceDatabase(config["recognition"]["database"]["location"])
+    @abstractmethod
+    def execute_task(self, task):
+        pass
 
     def run(self):
         for task in self._read_queue_until_quit():
-
-            if isinstance(task, RecognizeFaces):
-                bounding_boxes = self.models.detect_faces(task.image.data)
-                faces = [Face(bounding_box) for bounding_box in bounding_boxes]
-
-                # todo parallelize?
-                for face in faces:
-                    face.landmarks = self.models.find_landmarks(task.image.data, face.bounding_box)
-                    face.frontal, face.debug["frontal"] = self.models.is_frontal(task.image.data, face.bounding_box, face.landmarks)
-                    face.crop = self.models.crop(task.image.data, face.landmarks)
-
-                # do all faces at same time, much faster
-                all_features = self.models.extract_features(np.array([face.crop for face in faces]))
-                for face, features in zip(faces, all_features):
-                    face.features = features
-
-                # todo parallelize?
-                for face in faces:
-                    face.match = self.face_database.match(face.crop, face.features, face.frontal)
-
-                self.result_queue.put(RecognitionResult(task.image.id, faces))
-
-            elif isinstance(task, BackupFaceDatabase):
-                self.face_database.store()
-
-            else:
-                raise NotImplementedError()
+            result = self.execute_task(task)
+            self.result_queue.put(result)
 
     def _read_queue_until_quit(self):
         while not self.stop_request.isSet():
@@ -61,7 +38,45 @@ class RecognitionThread(threading.Thread):
 
     def join(self, timeout=None):
         self.stop_request.set()
-        super(RecognitionThread, self).join(timeout)
+        super(WorkerThread, self).join(timeout)
+
+
+class RecognitionThread(WorkerThread):
+    def __init__(self, config, task_queue, result_queue):
+        super(RecognitionThread, self).__init__(task_queue, result_queue)
+
+        self.models = init_model_stack(config)
+        self.face_database = FaceDatabase(config["recognition"]["database"]["location"])
+
+    def execute_task(self, task):
+        if isinstance(task, DetectFaces):
+            bounding_boxes = self.models.detect_faces(task.image.data)
+            faces = [Face(bounding_box=box) for box in bounding_boxes]
+            return DetectionResult(task.image, faces)
+
+        elif isinstance(task, CropFaces):
+            for face in task.faces:
+                face.landmarks = self.models.find_landmarks(task.image.data, face.bounding_box)
+                face.frontal = self.models.is_frontal(face.bounding_box, face.landmarks)
+                face.crop = self.models.crop(task.image.data, face.landmarks)
+            return CroppingResult(task.image, task.faces)
+
+        elif isinstance(task, ExtractFeatures):
+            all_features = self.models.extract_features(np.array([face.crop for face in task.faces]))
+            for face, features in zip(task.faces, all_features):
+                face.features = features
+            return FeatureExtractionResult(task.image, task.faces)
+
+        elif isinstance(task, RecognizePeople):
+            for face in task.faces:
+                face.match = self.face_database.match(face.crop, face.features, face.frontal)
+            return RecognitionResult(task.image.id, task.faces)
+
+        elif isinstance(task, BackupFaceDatabase):
+            self.face_database.store()
+
+        else:
+            raise NotImplementedError()
 
 
 @contextmanager
