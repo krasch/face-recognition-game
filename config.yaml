@@ -6,8 +6,8 @@ camera:
   zoom: 1.00
   framerate: 15
 
-# prerecorded: tests/frames/%d.png
-prerecorded: tests/2019-10-27-152050.webm
+# prerecorded: tests/data/kat_im_buero/%d.png
+prerecorded: tests/data/kat+petter.webm
 
 recognition:
   # every x frames, recognition should be run
