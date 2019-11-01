@@ -6,7 +6,8 @@ camera:
   zoom: 1.00
   framerate: 15
 
-prerecorded_frames: tests/frames/%d.png
+# prerecorded: tests/frames/%d.png
+prerecorded: tests/2019-10-27-152050.webm
 
 recognition:
   # every x frames, recognition should be run

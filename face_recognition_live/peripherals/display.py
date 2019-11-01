@@ -2,7 +2,7 @@ from contextlib import contextmanager
 
 import cv2
 
-from face_recognition_live.models.landmarks import DLIB68_FACE_LOCATIONS
+from face_recognition_live.recognition.models.landmarks import DLIB68_FACE_LOCATIONS
 
 # BGR
 RED = (0, 0, 255)
@@ -46,12 +46,9 @@ def add_match(frame, face):
 
 
 def add_is_frontal_debug(frame, face):
-    if "frontal" not in face.debug:
-        return
+    left, right, top, bottom = face.frontal.frontal_box
 
-    left, right, top, bottom = face.debug["frontal"]
-
-    if face.frontal:
+    if face.frontal.is_frontal:
         color = GREEN
     else:
         color = RED

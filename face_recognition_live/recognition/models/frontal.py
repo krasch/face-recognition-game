@@ -2,7 +2,7 @@ from enum import Enum
 from collections import namedtuple
 
 
-from face_recognition_live.models.landmarks import DLIB68_FACE_LOCATIONS
+from face_recognition_live.recognition.models.landmarks import DLIB68_FACE_LOCATIONS
 
 
 class FRONTAL_MODEL(Enum):

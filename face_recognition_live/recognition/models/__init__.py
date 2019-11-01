@@ -1,11 +1,11 @@
 from pathlib import Path
 from collections import namedtuple
 
-from face_recognition_live.models.detection import init_face_detector, DETECTION_MODEL
-from face_recognition_live.models.landmarks import init_landmark_detection, LANDMARK_MODEL
-from face_recognition_live.models.frontal import init_frontal_detection, FRONTAL_MODEL
-from face_recognition_live.models.cropping import init_face_cropper, CROPPING_METHOD
-from face_recognition_live.models.features import init_feature_extractor, FEATURE_EXTRACTION_MODEL
+from face_recognition_live.recognition.models.detection import init_face_detector, DETECTION_MODEL
+from face_recognition_live.recognition.models.landmarks import init_landmark_detection, LANDMARK_MODEL
+from face_recognition_live.recognition.models.frontal import init_frontal_detection, FRONTAL_MODEL
+from face_recognition_live.recognition.models.cropping import init_face_cropper, CROPPING_METHOD
+from face_recognition_live.recognition.models.features import init_feature_extractor, FEATURE_EXTRACTION_MODEL
 
 
 ModelStack = namedtuple("ModelStack", ["detect_faces", "find_landmarks", "is_frontal", "crop", "extract_features"])

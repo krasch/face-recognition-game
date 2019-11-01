@@ -7,9 +7,10 @@ import quickargs
 
 from face_recognition_live.peripherals.camera import init_camera
 from face_recognition_live.peripherals.display import init_display, show_frame
-from face_recognition_live.recognition import init_recognition
+from face_recognition_live.recognition.recognition import init_recognition
 from face_recognition_live.events.tasks import *
 from face_recognition_live.events.results import *
+from face_recognition_live.queue import MonitoredQueue
 
 
 def read_queue_until_quit(q):
@@ -28,8 +29,8 @@ def run(config):
     DATABASE_BACKUP_FREQUENCY = config["recognition"]["database"]["backup_frequency"]
     RECOGNITION_FREQUENCY = config["recognition"]["framerate"]
 
-    tasks = queue.Queue()
-    results = queue.Queue()
+    tasks = MonitoredQueue("tasks")
+    results = MonitoredQueue("results")
 
     # most recent image and most recent recognized faces
     image = None

@@ -57,8 +57,8 @@ class SlowerStream:
 
 @contextmanager
 def open_stream(config):
-    if "prerecorded_frames" in config:
-        video_capture = SlowerStream(cv2.VideoCapture(config["prerecorded_frames"]), 10)
+    if "prerecorded" in config:
+        video_capture = SlowerStream(cv2.VideoCapture(config["prerecorded"]), 10)
     elif running_on_jetson():
         video_capture = cv2.VideoCapture(get_jetson_gstreamer_source(config), cv2.CAP_GSTREAMER)
     else:
