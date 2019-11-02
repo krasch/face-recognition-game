@@ -8,7 +8,7 @@ fi
 # create output dirs
 mkdir "$DIRECTORY"
 mkdir "$DIRECTORY/face_detection"
-mkdir "$DIRECTORY/face_cropping"
+mkdir "$DIRECTORY/landmark_detection"
 mkdir "$DIRECTORY/feature_extraction"
 
 # face detection models
@@ -26,7 +26,7 @@ cd ../..
 
 # face cropping / landmark detection models
 
-cd "$DIRECTORY/face_cropping"
+cd "$DIRECTORY/landmark_detection"
 
 wget http://dlib.net/files/shape_predictor_5_face_landmarks.dat.bz2
 bunzip2 shape_predictor_5_face_landmarks.dat.bz2
