@@ -86,7 +86,7 @@ class RecognitionThread(WorkerThread):
 
                 # set match
                 if match_result.match_type == MATCH_TYPE.MATCH:
-                    face.match = match_result.best_match
+                    face.match = match_result
 
                 # was too near other faces, do not add to database just in case
                 elif match_result.match_type == MATCH_TYPE.LIKELY_NO_MATCH:

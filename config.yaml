@@ -5,9 +5,11 @@ camera:
   flip: 0
   zoom: 1.00
   framerate: 15
+  increase_brightness: 30
 
-# prerecorded: tests/data/kat_im_buero/%d.png
-prerecorded: tests/data/kat+petter.webm
+# prerecorded: tests/data/generated/%d.png
+prerecorded: tests/data/kat_im_buero/%d.png
+#prerecorded: tests/data/kat+petter.webm
 
 recognition:
   # every x frames, recognition should be run

@@ -55,10 +55,23 @@ class SlowerStream:
         self.fast_stream.release()
 
 
+def increase_brightness(img, value=30):
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    h, s, v = cv2.split(hsv)
+
+    lim = 255 - value
+    v[v > lim] = 255
+    v[v <= lim] += value
+
+    final_hsv = cv2.merge((h, s, v))
+    img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
+    return img
+
+
 @contextmanager
 def open_stream(config):
     if "prerecorded" in config:
-        video_capture = SlowerStream(cv2.VideoCapture(config["prerecorded"]), 10)
+        video_capture = SlowerStream(cv2.VideoCapture(config["prerecorded"]), 5)
     elif running_on_jetson():
         video_capture = cv2.VideoCapture(get_jetson_gstreamer_source(config), cv2.CAP_GSTREAMER)
     else:
@@ -85,6 +98,8 @@ class CameraThread(threading.Thread):
             while not self.stoprequest.isSet():
                 has_image, image = stream.read()
                 if has_image:
+                    image = increase_brightness(image, self.config["camera"]["increase_brightness"])
+                    image = cv2.flip(image, 1)  # mirror mode
                     self.results_queue.put(CameraImage(counter, image))
                     counter = (counter + 1) % self.COUNTER_WRAPAROUND
 
