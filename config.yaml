@@ -1,15 +1,29 @@
-camera:
-  # following camera parameters only used when running on jetson
-  width: 1280
-  height: 720
-  flip: 0
-  zoom: 1.00
-  framerate: 15
-  increase_brightness: 30
+source: prerecorded  # one of camera_jetson, camera, prerecorded
 
-# prerecorded: tests/data/generated/%d.png
-prerecorded: tests/data/kat_im_buero/%d.png
-#prerecorded: tests/data/kat+petter.webm
+source_settings:
+  increase_brightness: 30
+  mirror: true
+
+  # only used with jetson camera, no live-reload
+  camera_jetson:
+    width: 1280
+    height: 720
+    display_width: 1280
+    display_height: 720
+    flip: 0
+    zoom: 1.00
+    framerate: 15
+
+  # only used with usb/builtin camera, no live-reload
+  camera:
+    location: 0
+
+  # only used with pre-recorded file, no live-reload
+  prerecorded:
+    # location: tests/data/generated/%d.png
+    # location: tests/data/kat_im_buero/%d.png
+    location: tests/data/kat+petter.webm
+
 
 recognition:
   # every x frames, recognition should be run
@@ -18,20 +32,26 @@ recognition:
   results_max_age: 20
 
   models:
-     directory: "models"
-     stack: "HOG+dlibcrop+openface"   # do not use CNN on laptop
+     directory: "models" # no live-reload
+     stack: "HOG+dlibcrop+openface"   # do not use CNN on laptop; # no live-reload
      face_detection:
        scale: 0.5
+     frontal_detection:
+       nose_centered_tolerance_x: 0.05
+       nose_centered_tolerance_y: 0.05
+     matching:
+       num_matches: 3
+       match_cutoff: 0.5
+       storage_cutoff: 0.7
 
   database:
-     location: "database.pkl"
+     location: "database.pkl"  # no live-reload
      backup_frequency: 100  # every x frames
 
 display:
-  width: 1280
-  height: 720
+  debug: true
   fullscreen: false
-  face_info_max_age: 4
+  match_display_size: 100
 
 
 

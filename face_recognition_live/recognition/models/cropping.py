@@ -12,6 +12,6 @@ def init_face_cropper(cropping_method):
         raise NotImplementedError()
 
     def run(image, landmarks):
-        return dlib.get_face_chip(image, landmarks) # todo 96
+        return dlib.get_face_chip(image, landmarks)  # todo 96
 
     return run

@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 
 from face_recognition_live.recognition.models.landmarks import DLIB68_FACE_LOCATIONS
+from face_recognition_live.config import CONFIG
 
 # BGR
 RED = (0, 0, 255)
@@ -12,15 +13,12 @@ GREEN = (0, 255, 0)
 GREY = (125, 125, 125)
 WHITE = (255, 255, 255)
 
-MATCH_DISPLAY_SIZE = 100
-
-DEBUG = True
 
 
 @contextmanager
-def init_display(config):
+def init_display():
     name = "window"
-    if config["display"]["fullscreen"]:
+    if CONFIG["display"]["fullscreen"]:
         cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     else:
@@ -52,30 +50,32 @@ def make_round_mask(image, x, y, radius):
 
 
 def add_match(frame, face):
+    size = CONFIG["display"]["match_display_size"]
+
     height, width, _ = frame.shape
     if face.match:
-        for i, match in enumerate(face.match.all_matches):
-            x = face.bounding_box.left() + MATCH_DISPLAY_SIZE*i + 5
-            y = face.bounding_box.top() - int(MATCH_DISPLAY_SIZE*1.2)
-            radius = int(MATCH_DISPLAY_SIZE / 2.0)
+        for i, match in enumerate(face.match.matches):
+            x = face.bounding_box.left() + size*i + 5
+            y = face.bounding_box.top() - int(size*1.2)
+            radius = int(size / 2.0)
 
             # for square thumbnail
             # thumbnail = cv2.resize(face.match.best_match.image, (MATCH_DISPLAY_SIZE, MATCH_DISPLAY_SIZE))
             # frame[y:y+MATCH_DISPLAY_SIZE, x:x + MATCH_DISPLAY_SIZE] = thumbnail
 
             # for round thumbnail
-            thumbnail = cv2.resize(match.image, (MATCH_DISPLAY_SIZE, MATCH_DISPLAY_SIZE))
-            thumbnail_at_right_place = np.zeros((height+MATCH_DISPLAY_SIZE*2, width+MATCH_DISPLAY_SIZE*2, 3), np.uint8)
-            thumbnail_at_right_place[y+MATCH_DISPLAY_SIZE: y + MATCH_DISPLAY_SIZE*2, x+MATCH_DISPLAY_SIZE: x + MATCH_DISPLAY_SIZE*2] = thumbnail
-            thumbnail_at_right_place = thumbnail_at_right_place[MATCH_DISPLAY_SIZE:-MATCH_DISPLAY_SIZE, MATCH_DISPLAY_SIZE:-MATCH_DISPLAY_SIZE,:]
+            thumbnail = cv2.resize(match.image, (size, size))
+            thumbnail_at_right_place = np.zeros((height+size*2, width+size*2, 3), np.uint8)
+            thumbnail_at_right_place[y+size: y + size*2, x+size: x + size*2] = thumbnail
+            thumbnail_at_right_place = thumbnail_at_right_place[size:-size, size:-size,:]
             mask = make_round_mask(frame, x, y, radius)
             np.copyto(src=thumbnail_at_right_place, dst=frame, where=mask)
             cv2.circle(frame, (x+radius, y+radius), radius, WHITE, thickness=2)
 
     else:
         x = face.bounding_box.left() + 5
-        y = face.bounding_box.top() - int(MATCH_DISPLAY_SIZE * 1.2)
-        radius = int(MATCH_DISPLAY_SIZE / 2.0)
+        y = face.bounding_box.top() - int(size * 1.2)
+        radius = int(size / 2.0)
         cv2.circle(frame, (x + radius, y + radius), radius, WHITE, thickness=-1)
         cv2.putText(frame, "?", (x+radius-20, y+radius+20), cv2.FONT_HERSHEY_DUPLEX, 2.0, (0,0,0),  lineType=cv2.LINE_AA)
 
@@ -92,10 +92,12 @@ def add_is_frontal_debug(frame, face):
 
 
 def add_match_distance(frame, face):
+    size = CONFIG["display"]["match_display_size"]
+
     if face.match:
-        for i, match in enumerate(face.match.all_matches):
-            x = face.bounding_box.left() + MATCH_DISPLAY_SIZE*i+10
-            y = face.bounding_box.top() - MATCH_DISPLAY_SIZE
+        for i, match in enumerate(face.match.matches):
+            x = face.bounding_box.left() + size*i+10
+            y = face.bounding_box.top() - size
             dist = round(sorted(face.match.distances)[i], 2)
             cv2.putText(frame, str(dist), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, WHITE,  lineType=cv2.LINE_AA)
 
@@ -116,11 +118,11 @@ def show_frame(display, image, recognition_result):
             add_match(frame, face)
             add_landmarks(frame, face)
 
-            if DEBUG:
+            if CONFIG["display"]["debug"]:
                 add_is_frontal_debug(frame, face)
                 add_match_distance(frame, face)
 
-    if DEBUG:
+    if CONFIG["display"]["debug"]:
         cv2.putText(frame, str(image.id), (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.0, WHITE, lineType=cv2.LINE_AA)
 
     cv2.imshow(display, frame)

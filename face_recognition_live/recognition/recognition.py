@@ -7,6 +7,7 @@ from datetime import datetime
 
 import numpy as np
 
+from face_recognition_live.config import CONFIG
 from face_recognition_live.events.tasks import *
 from face_recognition_live.events.results import *
 from face_recognition_live.database import FaceDatabase
@@ -52,11 +53,11 @@ class WorkerThread(threading.Thread):
 
 
 class RecognitionThread(WorkerThread):
-    def __init__(self, config, task_queue, result_queue):
+    def __init__(self, task_queue, result_queue):
         super(RecognitionThread, self).__init__(task_queue, result_queue)
 
-        self.models = init_model_stack(config)
-        self.face_database = FaceDatabase(config["recognition"]["database"]["location"])
+        self.models = init_model_stack()
+        self.face_database = FaceDatabase(CONFIG["recognition"]["database"]["location"])
         self._monitoring = MonitoringDatabase("recognition")
 
     def execute_task(self, task):
@@ -108,8 +109,8 @@ class RecognitionThread(WorkerThread):
 
 
 @contextmanager
-def init_recognition(config, work_queue, results_queue):
-    recognition = RecognitionThread(config, work_queue, results_queue)
+def init_recognition(work_queue, results_queue):
+    recognition = RecognitionThread(work_queue, results_queue)
     time.sleep(3)
 
     try:

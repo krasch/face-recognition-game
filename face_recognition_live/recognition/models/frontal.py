@@ -2,6 +2,7 @@ from enum import Enum
 from collections import namedtuple
 
 
+from face_recognition_live.config import CONFIG
 from face_recognition_live.recognition.models.landmarks import DLIB68_FACE_LOCATIONS
 
 
@@ -12,10 +13,6 @@ class FRONTAL_MODEL(Enum):
 FrontalResult = namedtuple("FrontalResult", ["is_frontal", "frontal_box"])
 
 
-NOSE_CENTERED_TOLERANCE_X = 0.05
-NOSE_CENTERED_TOLERANCE_Y = 0.05
-
-
 def nose_centered(bounding_box, landmarks_68):
     box_height = bounding_box.bottom() - bounding_box.top()
     box_width = bounding_box.right() - bounding_box.left()
@@ -23,8 +20,8 @@ def nose_centered(bounding_box, landmarks_68):
     expected_nose_location_x = bounding_box.left() + int(box_width / 2.0)
     expected_nose_location_y = bounding_box.top() + int(box_height / 2.0)
 
-    diff_x = int(box_width * NOSE_CENTERED_TOLERANCE_X)
-    diff_y = int(box_height * NOSE_CENTERED_TOLERANCE_Y)
+    diff_x = int(box_width * CONFIG["recognition"]["models"]["frontal_detection"]["nose_centered_tolerance_x"])
+    diff_y = int(box_height * CONFIG["recognition"]["models"]["frontal_detection"]["nose_centered_tolerance_y"])
 
     acceptable_nose_location_left = expected_nose_location_x - diff_x
     acceptable_nose_location_right = expected_nose_location_x + diff_x

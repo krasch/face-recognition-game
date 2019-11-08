@@ -4,13 +4,15 @@ from enum import Enum
 import dlib
 import cv2
 
+from face_recognition_live.config import CONFIG
+
 
 class DETECTION_MODEL(Enum):
     HOG = 1
     CNN = 2
 
 
-def init_face_detector(model_type: DETECTION_MODEL, model_dir: Path, scale):
+def init_face_detector(model_type: DETECTION_MODEL, model_dir: Path):
     if model_type == DETECTION_MODEL.HOG:
         detector = init_face_detector_hog()
     elif model_type == DETECTION_MODEL.CNN:
@@ -19,6 +21,7 @@ def init_face_detector(model_type: DETECTION_MODEL, model_dir: Path, scale):
         raise NotImplementedError()
 
     def unscale(rect):
+        scale = CONFIG["recognition"]["models"]["face_detection"]["scale"]
         return dlib.rectangle(int(rect.left() * 1.0 / scale), int(rect.top() * 1.0 / scale),
                               int(rect.right() * 1.0 / scale), int(rect.bottom() * 1.0 / scale))
 
@@ -27,6 +30,7 @@ def init_face_detector(model_type: DETECTION_MODEL, model_dir: Path, scale):
         return rect.left() > 0 and rect.right() < image_width and rect.top() > 0 and rect.bottom() < image_height
 
     def run(image):
+        scale = CONFIG["recognition"]["models"]["face_detection"]["scale"]
         small_image = cv2.resize(image, (0, 0), fx=scale, fy=scale)
         result = detector(small_image)
 

@@ -1,8 +1,6 @@
 import queue
 
 import cv2
-import yaml
-import quickargs
 
 
 from face_recognition_live.peripherals.camera import init_camera
@@ -11,12 +9,18 @@ from face_recognition_live.recognition.recognition import init_recognition
 from face_recognition_live.events.tasks import *
 from face_recognition_live.events.results import *
 from face_recognition_live.queue import MonitoredQueue
+from face_recognition_live.config import CONFIG
 
 
 def read_queue_until_quit(q):
     while True:
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        pressed_key = cv2.waitKey(1)
+
+        if pressed_key and pressed_key == ord('q'):
             break
+
+        if pressed_key and pressed_key == ord('u'):
+            CONFIG.reload()
 
         try:
             yield q.get(True, 1.0/50.0)
@@ -24,11 +28,7 @@ def read_queue_until_quit(q):
             continue
 
 
-def run(config):
-    RESULTS_MAX_AGE = config["recognition"]["results_max_age"]
-    DATABASE_BACKUP_FREQUENCY = config["recognition"]["database"]["backup_frequency"]
-    RECOGNITION_FREQUENCY = config["recognition"]["framerate"]
-
+def run():
     tasks = MonitoredQueue("tasks")
     results = MonitoredQueue("results")
 
@@ -36,7 +36,7 @@ def run(config):
     image = None
     faces = None
 
-    with init_display(config) as display, init_camera(config, results), init_recognition(config, tasks, results):
+    with init_display() as display, init_camera(results), init_recognition(tasks, results):
         # initialization: wait for the very first image from the camera
         # will not do face recognition on this one to simplify code, next image will come soon anyway
         for result in read_queue_until_quit(results):
@@ -47,16 +47,16 @@ def run(config):
         # main loop
         for result in read_queue_until_quit(results):
 
-            if result.is_outdated(image.id, RESULTS_MAX_AGE):
+            if result.is_outdated(image.id, CONFIG["recognition"]["results_max_age"]):
                 continue
 
             if isinstance(result, CameraImage):
                 image = result
 
-                if image.id % DATABASE_BACKUP_FREQUENCY == 0:
+                if image.id % CONFIG["recognition"]["database"]["backup_frequency"] == 0:
                     tasks.put(BackupFaceDatabase())
 
-                if image.id % RECOGNITION_FREQUENCY == 0:
+                if image.id % CONFIG["recognition"]["framerate"] == 0:
                     tasks.put(DetectFaces(image))
 
             elif isinstance(result, DetectionResult):
@@ -74,14 +74,12 @@ def run(config):
             else:
                 raise NotImplementedError()
 
-            if faces and faces.is_outdated(image.id, RESULTS_MAX_AGE):
+            if faces and faces.is_outdated(image.id, CONFIG["recognition"]["results_max_age"]):
                 faces = None
 
             show_frame(display, image, faces)
 
 
 if __name__ == "__main__":
-    with open("config.yaml") as f:
-        configuration = yaml.load(f, Loader=quickargs.YAMLArgsLoader)
-    run(configuration)
+    run()
 
