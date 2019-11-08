@@ -1,4 +1,4 @@
-source: prerecorded  # one of camera_jetson, camera, prerecorded
+source: prerecorded # one of camera_jetson, camera, prerecorded
 
 source_settings:
   increase_brightness: 30
@@ -21,8 +21,8 @@ source_settings:
   # only used with pre-recorded file, no live-reload
   prerecorded:
     # location: tests/data/generated/%d.png
-    # location: tests/data/kat_im_buero/%d.png
-    location: tests/data/kat+petter.webm
+    location: tests/data/kat_im_buero/%d.png
+    # location: tests/data/kat+petter.webm
 
 
 recognition:
@@ -41,8 +41,8 @@ recognition:
        nose_centered_tolerance_y: 0.05
      matching:
        num_matches: 3
-       match_cutoff: 0.5
-       storage_cutoff: 0.7
+       match_cutoff: 0.6
+       storage_cutoff: 1.0
 
   database:
      location: "database.pkl"  # no live-reload

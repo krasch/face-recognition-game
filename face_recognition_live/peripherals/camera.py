@@ -108,6 +108,7 @@ class CameraThread(threading.Thread):
                     image = increase_brightness(image, CONFIG["source_settings"]["increase_brightness"])
                     if CONFIG["source_settings"]["mirror"]:
                         image = cv2.flip(image, 1)
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                     self.results_queue.put(CameraImage(counter, image))
                     counter = (counter + 1) % self.COUNTER_WRAPAROUND
 

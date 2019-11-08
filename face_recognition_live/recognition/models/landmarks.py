@@ -30,7 +30,7 @@ def init_landmark_detection(model_type, model_dir: Path):
     else:
         raise NotImplementedError()
 
-    def run(image, bounding_box):
-        return landmark_model(image[:, :, ::-1], bounding_box)
+    def run(rgb_image, bounding_box):
+        return landmark_model(rgb_image, bounding_box)
 
     return run

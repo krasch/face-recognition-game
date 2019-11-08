@@ -29,9 +29,9 @@ def init_face_detector(model_type: DETECTION_MODEL, model_dir: Path):
     def fully_inside_image(rect, image_width, image_height):
         return rect.left() > 0 and rect.right() < image_width and rect.top() > 0 and rect.bottom() < image_height
 
-    def run(image):
+    def run(rgb_image):
         scale = CONFIG["recognition"]["models"]["face_detection"]["scale"]
-        small_image = cv2.resize(image, (0, 0), fx=scale, fy=scale)
+        small_image = cv2.resize(rgb_image, (0, 0), fx=scale, fy=scale)
         result = detector(small_image)
 
         height, width = small_image.shape[0], small_image.shape[1]
@@ -45,8 +45,8 @@ def init_face_detector(model_type: DETECTION_MODEL, model_dir: Path):
 def init_face_detector_hog():
     detector = dlib.get_frontal_face_detector()
 
-    def run(image):
-        return detector(image[:, :, ::-1])
+    def run(rgb_image):
+        return detector(rgb_image)   # what does parameter "1" mean
 
     return run
 
@@ -55,7 +55,7 @@ def init_face_detector_cnn(model_dir: Path):
     model_location = model_dir / "face_detection" / "mmod_human_face_detector.dat"
     detector = dlib.cnn_face_detection_model_v1(str(model_location))
 
-    def run(image):
-        return [r.rect for r in detector(image, 0)]  # todo check confidence
+    def run(rgb_image):
+        return [r.rect for r in detector(rgb_image, 0)]  # todo check confidence
 
     return run

@@ -17,14 +17,14 @@ def init_model_stack():
         detection_model = DETECTION_MODEL.CNN
         landmark_model = LANDMARK_MODEL.DLIB_68
         frontal_model = FRONTAL_MODEL.NOSE_LOCATION
-        cropping_method = CROPPING_METHOD.DLIB_68
+        cropping_method = CROPPING_METHOD.OPEN_FACE_DLIB_BASED
         feature_model = FEATURE_EXTRACTION_MODEL.OPEN_FACE_NN4_SMALL2
 
     elif CONFIG["recognition"]["models"]["stack"] == "HOG+dlibcrop+openface":
         detection_model = DETECTION_MODEL.HOG
         landmark_model = LANDMARK_MODEL.DLIB_68
         frontal_model = FRONTAL_MODEL.NOSE_LOCATION
-        cropping_method = CROPPING_METHOD.DLIB_68
+        cropping_method = CROPPING_METHOD.OPEN_FACE_DLIB_BASED
         feature_model = FEATURE_EXTRACTION_MODEL.OPEN_FACE_NN4_SMALL2
     else:
         raise NotImplementedError()

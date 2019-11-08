@@ -65,6 +65,7 @@ def add_match(frame, face):
 
             # for round thumbnail
             thumbnail = cv2.resize(match.image, (size, size))
+            thumbnail = cv2.cvtColor(thumbnail, cv2.COLOR_RGB2BGR)
             thumbnail_at_right_place = np.zeros((height+size*2, width+size*2, 3), np.uint8)
             thumbnail_at_right_place[y+size: y + size*2, x+size: x + size*2] = thumbnail
             thumbnail_at_right_place = thumbnail_at_right_place[size:-size, size:-size,:]
@@ -103,14 +104,16 @@ def add_match_distance(frame, face):
 
 
 def show_frame(display, image, recognition_result):
-    if image.id == 60:
-        with open("tests/data/display_test/data.pkl", "wb") as f:
-            pickle.dump({"image": image, "recognition_result": recognition_result}, f)
-
     if image is None:
         return
 
+    if image.id == 60:
+        # todo stores as bgr
+        with open("tests/data/display_test/data.pkl", "wb") as f:
+            pickle.dump({"image": image, "recognition_result": recognition_result}, f)
+
     frame = image.data.copy()
+    frame.data = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
     if recognition_result:
         for face in recognition_result.faces:
