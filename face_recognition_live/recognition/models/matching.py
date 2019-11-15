@@ -61,7 +61,7 @@ def init_matching(matching_method):
         order = np.argsort(distances)
 
         # even the best match is not near any known face
-        if distances[order[0]] > config["new_face_cutoff"]:
+        if len(distances) == 0 or distances[order[0]] > config["new_face_cutoff"]:
             return MatchResultOverall.NEW_FACE, None
 
         matches = [MatchingFace(known_faces[d], distances[d], get_match_quality(distances[d], config)) for d in order]
