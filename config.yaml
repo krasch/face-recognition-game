@@ -40,7 +40,6 @@ recognition:
        nose_centered_tolerance_x: 0.05
        nose_centered_tolerance_y: 0.05
      matching:
-       num_matches: 3
        excellent_match_cutoff: 0.2
        good_match_cutoff: 0.4
        poor_match_cutoff: 0.6
@@ -54,6 +53,8 @@ display:
   debug: true
   fullscreen: false
   thumbnail_size: 100
+  num_matches: 3
+  num_matches_debug: 5
 
 
 

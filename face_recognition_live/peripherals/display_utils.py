@@ -6,8 +6,9 @@ from PIL import ImageFont, ImageDraw, Image
 THREE_STARS = u"★★★"
 TWO_STARS = u"★★☆"
 ONE_STAR = u"★☆☆"
+NO_STARS = u"☆☆☆"
 
-STARS = {1: ONE_STAR, 2: TWO_STARS, 3: THREE_STARS}
+STARS = {0: NO_STARS, 1: ONE_STAR, 2: TWO_STARS, 3: THREE_STARS}
 
 font = ImageFont.truetype("face_recognition_live/peripherals/OpenSansEmoji.ttf", 40)
 

@@ -76,17 +76,22 @@ def add_matches(frame, face, config):
         elif match_quality == MatchQuality.POOR:
             return draw_stars(frame, x, y, 1)
         else:
-            return frame
+            return draw_stars(frame, x, y, 0)
 
     def add_match_distance(x, y, match_distance):
         y = y - radius - 5
         match_distance = np.round(match_distance, 2)
         cv2.putText(frame, str(match_distance), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, lineType=cv2.LINE_AA)
 
-    for i, match in enumerate(face.matches):
-        if match.quality == MatchQuality.NO_MATCH:
-            continue
+    # in debug mode display many matches, in all qualities
+    # in not debug mode only display the best x okayish matches
+    if config["debug"]:
+        matches = face.matches[:config["num_matches_debug"]]
+    else:
+        matches = [m for m in face.matches if m.quality != MatchQuality.NO_MATCH]
+        matches = matches[:config["num_matches"]]
 
+    for i, match in enumerate(matches):
         center_x, center_y = calculate_thumbnail_center(i)
         add_thumbnail(center_x, center_y, match.face.image)
         frame = add_match_stars(center_x, center_y, match.quality)

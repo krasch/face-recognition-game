@@ -65,14 +65,7 @@ def init_matching(matching_method):
             return MatchResultOverall.NEW_FACE, None
 
         matches = [MatchingFace(known_faces[d], distances[d], get_match_quality(distances[d], config)) for d in order]
-        matches = [m for m in matches if m.quality != MatchQuality.NO_MATCH]
-        matches = matches[:config["num_matches"]]
-        print(len(matches))
-
-        if len(matches) > 0:
-            return MatchResultOverall.KNOWN_FACE, matches
-        else:
-            return MatchResultOverall.NO_MATCH, []
+        return MatchResultOverall.KNOWN_FACE, matches
 
     return find_best_match
 
