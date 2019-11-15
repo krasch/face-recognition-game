@@ -5,39 +5,75 @@ from collections import namedtuple
 from face_recognition_live.config import CONFIG
 
 
-class MATCH_TYPE(Enum):
-    MATCH = 1
-    LIKELY_NO_MATCH = 2
-    DEFINITELY_NO_MATCH = 3
+class MatchResultOverall(Enum):
+    NEW_FACE = 1
+    KNOWN_FACE = 2
+    NO_MATCH = 3
 
 
-MatchResult = namedtuple("MatchResult", ["match_type", "best_match", "matches", "distances"])
+class MatchQuality(Enum):
+    EXCELLENT = 1
+    GOOD = 2
+    POOR = 3
+    NO_MATCH = 4
 
 
-def find_best_match(features, stored_faces):
-    if len(stored_faces) == 0:
-        return MatchResult(MATCH_TYPE.DEFINITELY_NO_MATCH, None, [], [])
+MatchingFace = namedtuple("MatchResult", ["face", "distance", "quality"])
 
-    distances = np.array([np.linalg.norm(features - saved_face.features) for saved_face in stored_faces])
-    distances2 = [features-saved_face.features for saved_face in stored_faces]
-    distances2 = np.array([np.dot(d, d) for d in distances2])
-    print(distances, distances2)
-    distances = distances2
-    best_match = np.argmin(distances)
 
-    config = CONFIG["recognition"]["models"]["matching"]
+class MATCHING_METHOD(Enum):
+    DOT = 1
+    L2 = 2
 
-    matches = [stored_faces[d] for d in np.argsort(distances) if distances[d] < config["match_cutoff"]]
-    matches = matches[:config["num_matches"]]
-    #print(distances[np.argsort(distances)])
 
-    if distances[best_match] < config["match_cutoff"]:
-        return MatchResult(MATCH_TYPE.MATCH, stored_faces[best_match], matches, distances)
-    elif distances[best_match] > config["storage_cutoff"]:
-        return MatchResult(MATCH_TYPE.DEFINITELY_NO_MATCH, None, matches, distances)
+def dot_product(features, saved_features):
+    diff = features - saved_features
+    return np.dot(diff, diff)
+
+
+def l2_norm(features, saved_features):
+    return np.linalg.norm(features - saved_features)
+
+
+def get_match_quality(distance, config):
+    if distance <= config["excellent_match_cutoff"]:
+        return MatchQuality.EXCELLENT
+    elif distance <= config["good_match_cutoff"]:
+        return MatchQuality.GOOD
+    elif distance <= config["poor_match_cutoff"]:
+        return MatchQuality.POOR
     else:
-        return MatchResult(MATCH_TYPE.LIKELY_NO_MATCH, None, matches, distances)
+        return MatchQuality.NO_MATCH
 
 
+def init_matching(matching_method):
+    if matching_method == MATCHING_METHOD.DOT:
+        calculate_distance = dot_product
+    elif matching_method == MATCHING_METHOD.L2:
+        calculate_distance = l2_norm
+    else:
+        raise NotImplementedError()
+
+    def find_best_match(features, known_faces):
+        config = CONFIG["recognition"]["models"]["matching"]
+
+        distances = [calculate_distance(features, face.features) for face in known_faces]
+        order = np.argsort(distances)
+
+        # even the best match is not near any known face
+        if distances[order[0]] > config["new_face_cutoff"]:
+            return MatchResultOverall.NEW_FACE, None
+
+        matches = [MatchingFace(known_faces[d], distances[d], get_match_quality(distances[d], config)) for d in order]
+        matches = [m for m in matches if m.quality != MatchQuality.NO_MATCH]
+        matches = matches[:config["num_matches"]]
+        print(len(matches))
+
+        if len(matches) > 0:
+            return MatchResultOverall.KNOWN_FACE, matches
+        else:
+            return MatchResultOverall.NO_MATCH, []
+
+    return find_best_match
 
 

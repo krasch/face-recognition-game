@@ -5,5 +5,5 @@ class Face:
         self.crop = None
         self.frontal = None
         self.features = None
-        self.match = None
+        self.matches = None
         self.debug = {}

@@ -33,7 +33,7 @@ recognition:
 
   models:
      directory: "models" # no live-reload
-     stack: "HOG+dlibcrop+openface"   # do not use CNN on laptop; # no live-reload
+     stack: "HOG+dlibcrop+openface+dot"   # do not use CNN on laptop; # no live-reload
      face_detection:
        scale: 0.5
      frontal_detection:
@@ -41,8 +41,10 @@ recognition:
        nose_centered_tolerance_y: 0.05
      matching:
        num_matches: 3
-       match_cutoff: 0.6
-       storage_cutoff: 1.0
+       excellent_match_cutoff: 0.2
+       good_match_cutoff: 0.4
+       poor_match_cutoff: 0.6
+       new_face_cutoff: 1.0
 
   database:
      location: "database.pkl"  # no live-reload
@@ -51,7 +53,7 @@ recognition:
 display:
   debug: true
   fullscreen: false
-  match_display_size: 100
+  thumbnail_size: 100
 
 
 

@@ -12,7 +12,7 @@ from face_recognition_live.events.tasks import *
 from face_recognition_live.events.results import *
 from face_recognition_live.database import FaceDatabase
 from face_recognition_live.recognition.models import init_model_stack
-from face_recognition_live.recognition.models.matching import MATCH_TYPE
+from face_recognition_live.recognition.models.matching import MatchResultOverall
 from face_recognition_live.recognition.face import Face
 from face_recognition_live.monitoring import MonitoringDatabase
 
@@ -82,22 +82,15 @@ class RecognitionThread(WorkerThread):
 
         elif isinstance(task, RecognizePeople):
             for face in task.faces:
-                match_result = self.face_database.match(face.features)
-                self._monitoring.add("distances", match_result.distances)
+                match_status, matches = self.models.match_faces(face.features, self.face_database.faces)
 
-                # set match
-                if match_result.match_type == MATCH_TYPE.MATCH:
-                    face.match = match_result
-
-                # was too near other faces, do not add to database just in case
-                elif match_result.match_type == MATCH_TYPE.LIKELY_NO_MATCH:
-                    pass
-
-                # not near any known faces, can safely add to database
-                elif match_result.match_type == MATCH_TYPE.DEFINITELY_NO_MATCH:
+                if match_status == MatchResultOverall.NEW_FACE:
                     if face.frontal.is_frontal:
                         print("Adding face to database")
                         self.face_database.add(face.features, face.crop)
+                else:
+                    self._monitoring.add("distances", [m.distance for m in matches])  #  todo move to matching
+                    face.matches = matches
 
             return RecognitionResult(task.image.id, task.faces)
 

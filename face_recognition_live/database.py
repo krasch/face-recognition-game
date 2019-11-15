@@ -4,8 +4,6 @@ import pickle
 from pathlib import Path
 
 
-from face_recognition_live.recognition.models.matching import find_best_match
-
 StoredFace = namedtuple("StoredFace", ["timestamp", "features", "image"])
 
 
@@ -21,9 +19,6 @@ class FaceDatabase:
     def add(self, features, image):
         timestamp = datetime.datetime.now()
         self.faces.append(StoredFace(timestamp, features, image))
-
-    def match(self, features):
-        return find_best_match(features, self.faces)
 
     def store(self):
         # only keep 1000 newest people

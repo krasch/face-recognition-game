@@ -16,7 +16,7 @@ class DLIB68_FACE_LOCATIONS(Enum):
     LEFT_EYE_LEFT_CORNER = 36
     RIGHT_EYE_RIGHT_CORNER = 45
     MOUTH_LEFT = 48
-    MOUNT_RIGHT = 54
+    MOUTH_RIGHT = 54
 
 
 def init_landmark_detection(model_type, model_dir: Path):
