@@ -91,38 +91,20 @@ def open_stream():
         video_capture.release()
 
 
-class CameraThread(threading.Thread):
-    COUNTER_WRAPAROUND = 10000
-
-    def __init__(self, results_queue: Queue):
-        super(CameraThread, self).__init__()
-        self.results_queue = results_queue
-        self.stoprequest = threading.Event()
-
-    def run(self):
-        with open_stream() as stream:
-            counter = 0
-            while not self.stoprequest.isSet():
-                has_image, image = stream.read()
-                if has_image:
-                    image = increase_brightness(image, CONFIG["source_settings"]["increase_brightness"])
-                    if CONFIG["source_settings"]["mirror"]:
-                        image = cv2.flip(image, 1)
-                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                    self.results_queue.put(CameraImage(counter, image))
-                    counter = (counter + 1) % self.COUNTER_WRAPAROUND
-
-    def join(self, timeout=None):
-        self.stoprequest.set()
-        super(CameraThread, self).join(timeout)
-
-
 @contextmanager
-def init_camera(results_queue):
-    camera = CameraThread(results_queue)
+def init_camera():
+    def read_from_camera(camera):
+        counter = 0
+        while True:
+            has_image, image = camera.read()
+            if has_image:
+                image = increase_brightness(image, CONFIG["source_settings"]["increase_brightness"])
+                if CONFIG["source_settings"]["mirror"]:
+                    image = cv2.flip(image, 1)
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                yield CameraImage(counter, image)
+                counter = (counter + 1) % 10000
 
-    try:
-        camera.start()
-        yield camera
-    finally:
-        camera.join()
+    with open_stream() as stream:
+        yield read_from_camera(stream)
+

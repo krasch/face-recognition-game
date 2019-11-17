@@ -1,7 +1,7 @@
 import queue
+from datetime import datetime
 
 import cv2
-
 
 from face_recognition_live.peripherals.camera import init_camera
 from face_recognition_live.peripherals.display import init_display, show_frame
@@ -12,8 +12,13 @@ from face_recognition_live.queue import MonitoredQueue
 from face_recognition_live.config import CONFIG
 
 
-def read_queue_until_quit(q):
-    while True:
+def read_camera_until_quit(camera):
+    frame_counter = 0
+    counter_start_time = datetime.now()
+
+    for image in camera:
+        yield image
+
         pressed_key = cv2.waitKey(1)
 
         if pressed_key and pressed_key == ord('q'):
@@ -22,68 +27,42 @@ def read_queue_until_quit(q):
         if pressed_key and pressed_key == ord('u'):
             CONFIG.reload()
 
-        try:
-            yield q.get(False)
-        except queue.Empty:
-            yield None
+        frame_counter += 1
+        if frame_counter == 100:
+            if counter_start_time is not None:
+                counter_end_time = datetime.now()
+                delta = counter_end_time - counter_start_time
+                delta = delta.seconds + delta.microseconds / 1000.0 / 1000.0
+                framerate = frame_counter / float(delta)
+                print("{} fps".format(framerate))
 
+            counter_start_time = datetime.now()
+            frame_counter = 0
 
 def run():
     tasks = MonitoredQueue("tasks")
     results = MonitoredQueue("results")
 
-    # most recent image and most recent recognized faces
-    image = None
     faces = None
+    currently_recognizing = False
 
-    currently_recognizing = True
+    with init_display() as display, init_camera() as camera, init_recognition(tasks, results):
+        for image in read_camera_until_quit(camera):
 
-    with init_display() as display, init_camera(results), init_recognition(tasks, results):
-        # initialization: wait for the very first image from the camera
-        # will not do face recognition on this one to simplify code, next image will come soon anyway
-        for result in read_queue_until_quit(results):
-            if isinstance(result, CameraImage):
-                image = result
-                break
-
-        # main loop
-        for i, result in enumerate(read_queue_until_quit(results)):
-
-            if i% 60 == 0:
-               print(i)
-            #if result.is_outdated(image.id, CONFIG["recognition"]["results_max_age"]):
-            #    continue
-
-            if isinstance(result, CameraImage):
-                image = result
-
-                if image.id % CONFIG["recognition"]["database"]["backup_frequency"] == 0:
-                    tasks.put(BackupFaceDatabase())
-
-                if not currently_recognizing:
-                    currently_recognizing = True
-                    tasks.put(DetectFaces(image))
-
-            elif isinstance(result, DetectionResult):
-                tasks.put(CropFaces(result.image, result.faces))
-
-            elif isinstance(result, CroppingResult):
-                tasks.put(ExtractFeatures(result.image, result.faces))
-
-            elif isinstance(result, FeatureExtractionResult):
-                tasks.put(RecognizePeople(result.image, result.faces))
-
-            elif isinstance(result, RecognitionResult):
-                faces = result
+            try:
+                faces = results.get(block=False)
                 currently_recognizing = False
+            except queue.Empty:
+                pass
 
+            if image.id % CONFIG["recognition"]["database"]["backup_frequency"] == 0:
+                tasks.put(BackupFaceDatabase())
 
-            #if faces and faces.is_outdated(image.id, CONFIG["recognition"]["results_max_age"]):
-            #    faces = None
+            if not currently_recognizing:
+                currently_recognizing = True
+                tasks.put(DetectFaces(image))
 
             show_frame(display, image, faces)
 
 
-if __name__ == "__main__":
-    run()
-
+run()

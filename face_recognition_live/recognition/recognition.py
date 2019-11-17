@@ -65,23 +65,17 @@ class RecognitionThread(WorkerThread):
             bounding_boxes = self.models.detect_faces(task.image.data)
             faces = [Face(bounding_box=box) for box in bounding_boxes]
             self._monitoring.add("face_count", len(faces))
-            return DetectionResult(task.image, faces)
 
-        elif isinstance(task, CropFaces):
-            for face in task.faces:
+            for face in faces:
                 face.landmarks = self.models.find_landmarks(task.image.data, face.bounding_box)
                 face.frontal = self.models.is_frontal(face.bounding_box, face.landmarks)
                 face.crop = self.models.crop(task.image.data, face.landmarks)
-            return CroppingResult(task.image, task.faces)
 
-        elif isinstance(task, ExtractFeatures):
-            all_features = self.models.extract_features(np.array([face.crop for face in task.faces]))
-            for face, features in zip(task.faces, all_features):
+            all_features = self.models.extract_features(np.array([face.crop for face in faces]))
+            for face, features in zip(faces, all_features):
                 face.features = features
-            return FeatureExtractionResult(task.image, task.faces)
 
-        elif isinstance(task, RecognizePeople):
-            for face in task.faces:
+            for face in faces:
                 match_status, matches = self.models.match_faces(face.features, self.face_database.faces)
 
                 if match_status == MatchResultOverall.NEW_FACE:
@@ -92,7 +86,7 @@ class RecognitionThread(WorkerThread):
                     self._monitoring.add("distances", [m.distance for m in matches])  #  todo move to matching
                     face.matches = matches
 
-            return RecognitionResult(task.image.id, task.faces)
+            return RecognitionResult(task.image.id, faces)
 
         elif isinstance(task, BackupFaceDatabase):
             self.face_database.store()

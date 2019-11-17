@@ -114,10 +114,8 @@ def add_is_frontal_debug(frame, face):
 
 
 def show_frame(display, image, recognition_result):
-    if image is None:
-        return
-
     frame = image.data.copy()
+
     frame.data = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
     height, width, _ = frame.shape
