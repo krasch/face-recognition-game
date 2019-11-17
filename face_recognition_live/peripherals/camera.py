@@ -31,8 +31,8 @@ def init_jetson_video_capture():
             f'nvarguscamerasrc ! video/x-raw(memory:NVMM), ' +
             f'width=(int){capture_width}, height=(int){capture_height}, ' +
             f'format=(string)NV12, framerate=(fraction){framerate}/1 ! ' +
-            # f'nvvidconv flip-method={flip_method} ! ' +
-            f'nvvidconv flip-method={flip} left={crop_left} right={crop_right} top={crop_top} bottom={crop_bottom} ! ' +
+            f'nvvidconv flip-method={flip} ! ' +
+            #f'nvvidconv flip-method={flip} left={crop_left} right={crop_right} top={crop_top} bottom={crop_bottom} ! ' +
             f'video/x-raw, width=(int){display_width}, height=(int){display_height}, format=(string)BGRx ! ' +
             'videoconvert ! video/x-raw, format=(string)BGR ! appsink'
             )

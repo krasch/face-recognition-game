@@ -14,20 +14,20 @@ class Config(MutableMapping):
 
     def __init__(self, config_file):
         self.config_file = Path(config_file)
-        self._lock = Lock()
+        # self._lock = Lock()
         self.reload()
 
     def __getitem__(self, key):
-        self._lock.acquire()
+        #self._lock.acquire()
         value = self.config[key]
-        self._lock.release()
+        #self._lock.release()
         return value
 
     def reload(self):
         print("Reloading config")
-        self._lock.acquire()
+        #self._lock.acquire()
         self.config = yaml.safe_load(self.config_file.read_text())
-        self._lock.release()
+        #self._lock.release()
 
     def __setitem__(self, key, value):
         raise NotImplementedError()

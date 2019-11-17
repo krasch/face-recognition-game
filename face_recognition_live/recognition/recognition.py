@@ -65,6 +65,7 @@ class RecognitionThread(WorkerThread):
             bounding_boxes = self.models.detect_faces(task.image.data)
             faces = [Face(bounding_box=box) for box in bounding_boxes]
             self._monitoring.add("face_count", len(faces))
+            print(len(faces))
 
             for face in faces:
                 face.landmarks = self.models.find_landmarks(task.image.data, face.bounding_box)
@@ -87,6 +88,7 @@ class RecognitionThread(WorkerThread):
                     face.matches = matches
 
             return RecognitionResult(task.image.id, faces)
+
 
         elif isinstance(task, BackupFaceDatabase):
             self.face_database.store()

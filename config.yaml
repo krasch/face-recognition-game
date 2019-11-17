@@ -1,4 +1,4 @@
-source: camera # one of camera_jetson, camera, prerecorded
+source: camera_jetson # one of camera_jetson, camera, prerecorded
 
 source_settings:
   increase_brightness: 0
@@ -33,12 +33,12 @@ recognition:
 
   models:
      directory: "models" # no live-reload
-     stack: "HOG+dlibcrop+openface+dot"   # do not use CNN on laptop; # no live-reload
+     stack: "CNN+dlibcrop+openface+dot"   # do not use CNN on laptop; # no live-reload
      face_detection:
        scale: 0.5
      frontal_detection:
-       nose_centered_tolerance_x: 0.05
-       nose_centered_tolerance_y: 0.05
+       nose_centered_tolerance_x: 0.1
+       nose_centered_tolerance_y: 0.1
      matching:
        excellent_match_cutoff: 0.2
        good_match_cutoff: 0.4
@@ -50,11 +50,11 @@ recognition:
      backup_frequency: 100  # every x frames
 
 display:
-  debug: true
+  debug: false
   fullscreen: false
   thumbnail_size: 100
   num_matches: 3
-  num_matches_debug: 5
+  num_matches_debug: 3
 
 
 
