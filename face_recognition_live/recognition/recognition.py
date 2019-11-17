@@ -43,7 +43,7 @@ class WorkerThread(threading.Thread):
     def _read_queue_until_quit(self):
         while not self.stop_request.isSet():
             try:
-                yield self.task_queue.get(True, 1.0 / 50.0)
+                yield self.task_queue.get(True, 1.0)
             except queue.Empty:
                 continue
 

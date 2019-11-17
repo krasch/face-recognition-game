@@ -1,7 +1,7 @@
-source: prerecorded # one of camera_jetson, camera, prerecorded
+source: camera_jetson # one of camera_jetson, camera, prerecorded
 
 source_settings:
-  increase_brightness: 30
+  increase_brightness: 0
   mirror: true
 
   # only used with jetson camera, no live-reload

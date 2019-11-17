@@ -23,9 +23,9 @@ def read_queue_until_quit(q):
             CONFIG.reload()
 
         try:
-            yield q.get(True, 1.0/50.0)
+            yield q.get(False)
         except queue.Empty:
-            continue
+            yield None
 
 
 def run():
@@ -36,6 +36,8 @@ def run():
     image = None
     faces = None
 
+    currently_recognizing = True
+
     with init_display() as display, init_camera(results), init_recognition(tasks, results):
         # initialization: wait for the very first image from the camera
         # will not do face recognition on this one to simplify code, next image will come soon anyway
@@ -45,10 +47,12 @@ def run():
                 break
 
         # main loop
-        for result in read_queue_until_quit(results):
+        for i, result in enumerate(read_queue_until_quit(results)):
 
-            if result.is_outdated(image.id, CONFIG["recognition"]["results_max_age"]):
-                continue
+            if i% 60 == 0:
+               print(i)
+            #if result.is_outdated(image.id, CONFIG["recognition"]["results_max_age"]):
+            #    continue
 
             if isinstance(result, CameraImage):
                 image = result
@@ -56,7 +60,8 @@ def run():
                 if image.id % CONFIG["recognition"]["database"]["backup_frequency"] == 0:
                     tasks.put(BackupFaceDatabase())
 
-                if image.id % CONFIG["recognition"]["framerate"] == 0:
+                if not currently_recognizing:
+                    currently_recognizing = True
                     tasks.put(DetectFaces(image))
 
             elif isinstance(result, DetectionResult):
@@ -70,12 +75,11 @@ def run():
 
             elif isinstance(result, RecognitionResult):
                 faces = result
+                currently_recognizing = False
 
-            else:
-                raise NotImplementedError()
 
-            if faces and faces.is_outdated(image.id, CONFIG["recognition"]["results_max_age"]):
-                faces = None
+            #if faces and faces.is_outdated(image.id, CONFIG["recognition"]["results_max_age"]):
+            #    faces = None
 
             show_frame(display, image, faces)
 
