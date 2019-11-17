@@ -40,8 +40,10 @@ def read_camera_until_quit(camera):
             frame_counter = 0
 
 def run():
-    tasks = MonitoredQueue("tasks")
-    results = MonitoredQueue("results")
+    #tasks = MonitoredQueue("tasks")
+    #results = MonitoredQueue("results")
+    tasks = queue.Queue()
+    results = queue.Queue()
 
     faces = None
     currently_recognizing = False
@@ -55,12 +57,12 @@ def run():
             except queue.Empty:
                 pass
 
-            if image.id % CONFIG["recognition"]["database"]["backup_frequency"] == 0:
-                tasks.put(BackupFaceDatabase())
-
-            if not currently_recognizing:
-                currently_recognizing = True
-                tasks.put(DetectFaces(image))
+            #if image.id % CONFIG["recognition"]["database"]["backup_frequency"] == 0:
+            #    tasks.put(BackupFaceDatabase())
+            if image.id % 15 == 0 and image.id > 0:
+                if not currently_recognizing:
+                    currently_recognizing = True
+                    tasks.put(DetectFaces(image))
 
             show_frame(display, image, faces)
 
