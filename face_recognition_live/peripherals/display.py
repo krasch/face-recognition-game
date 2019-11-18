@@ -2,8 +2,6 @@ from contextlib import contextmanager
 
 import cv2
 import numpy as np
-import sdl2
-import sdl2.ext
 
 from face_recognition_live.recognition.models.landmarks import DLIB68_FACE_LOCATIONS
 from face_recognition_live.recognition.models.matching import MatchQuality
