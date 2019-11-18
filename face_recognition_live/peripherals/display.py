@@ -62,15 +62,13 @@ def add_matches(frame, face, config):
 
     def add_thumbnail(x, y, thumbnail):
         thumbnail = cv2.resize(thumbnail, (thumbnail_size, thumbnail_size))
-        thumbnail = cv2.cvtColor(thumbnail, cv2.COLOR_RGB2BGR)
-        thumbnail = copy_object_to_location(height, width, x, y, thumbnail)
-
-        mask = make_round_mask(height, width, x, y, radius)
-        np.copyto(src=thumbnail, dst=frame, where=mask)
+        thumbnail = cv2.cvtColor(thumbnail, cv2.COLOR_RGB2RGBA)
+        mask = make_round_mask(thumbnail_size)
+        copy_object_to_location(frame, thumbnail, x, y, mask)
         cv2.circle(frame, (x + radius, y + radius), radius, WHITE, thickness=2)
 
     def add_match_stars(x, y, match_quality):
-        y = y - radius - 5
+        y = y - radius + 5
 
         if match_quality == MatchQuality.EXCELLENT:
             return draw_stars(frame, x, y, 3)
@@ -97,7 +95,7 @@ def add_matches(frame, face, config):
     for i, match in enumerate(matches):
         center_x, center_y = calculate_thumbnail_center(i)
         add_thumbnail(center_x, center_y, match.face.image)
-        frame = add_match_stars(center_x, center_y, match.quality)
+        add_match_stars(center_x, center_y, match.quality)
 
         if config["debug"]:
             add_match_distance(center_x, center_y, match.distance)
@@ -118,11 +116,11 @@ def add_is_frontal_debug(frame, face):
 
 @monitor_runtime
 def show_frame(display, image, recognition_result):
-    frame = image.data.copy()
-    frame.data = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+    frame = image.data
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2RGBA)
 
     height, width, _ = frame.shape
-    extended_frame = np.zeros((height + BUFFER*2, width+BUFFER*2, 3), np.uint8)
+    extended_frame = np.zeros((height + BUFFER*2, width+BUFFER*2, 4), np.uint8)
     extended_frame[BUFFER: height+BUFFER, BUFFER:width+BUFFER, :] = frame
 
     if recognition_result:
@@ -130,15 +128,16 @@ def show_frame(display, image, recognition_result):
             add_bounding_box(extended_frame, face)
             if face.matches:
                 extended_frame = add_matches(extended_frame, face, CONFIG["display"])
-            add_landmarks(extended_frame, face)
 
             if CONFIG["display"]["debug"]:
                 add_is_frontal_debug(extended_frame, face)
+                add_landmarks(extended_frame, face)
 
     if CONFIG["display"]["debug"]:
         cv2.putText(extended_frame, str(image.id), (20 + BUFFER, 30 + BUFFER),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.0, WHITE, lineType=cv2.LINE_AA)
 
     frame = extended_frame[BUFFER:-BUFFER, BUFFER:-BUFFER, :]
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2BGRA)
     cv2.imshow(display, frame)
 

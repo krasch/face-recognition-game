@@ -13,28 +13,11 @@ class CameraImage(Result):
         self.data = image
 
 
-class DetectionResult(Result):
-    def __init__(self, image, faces):
-        super().__init__(image.id)
-        self.image = image
-        self.faces = faces
-
-
-class CroppingResult(Result):
-    def __init__(self, image, faces):
-        super().__init__(image.id)
-        self.image = image
-        self.faces = faces
-
-
-class FeatureExtractionResult(Result):
-    def __init__(self, image, faces):
-        super().__init__(image.id)
-        self.image = image
-        self.faces = faces
-
-
 class RecognitionResult(Result):
     def __init__(self, image_id, faces):
         super().__init__(image_id)
         self.faces = faces
+
+
+class Error:
+    pass

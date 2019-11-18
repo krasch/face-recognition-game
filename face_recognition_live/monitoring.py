@@ -46,6 +46,7 @@ def monitor_runtime(f):
     return decorated
 
 
+""""
 class MonitoringDatabase:
     def __init__(self, name):
         self.data = defaultdict(lambda: deque(maxlen=10000))
@@ -61,6 +62,7 @@ class MonitoringDatabase:
     def store(self):
         with self._file.open("wb") as f:
             pickle.dump(dict(self.data), f)
+"""
 
 
 

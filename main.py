@@ -27,13 +27,19 @@ def read_camera_until_quit(camera):
 def run():
     tasks = Queue()
     results = Queue()
+    errors = Queue()
 
     faces = None
     currently_recognizing = False
 
-    with init_display() as display, init_camera() as camera, init_recognition(tasks, results):
+    with init_display() as display, init_camera() as camera, init_recognition(tasks, results, errors):
         for image in read_camera_until_quit(camera):
 
+            # recognition thread had an error, stop all processing
+            if not errors.empty():
+                break
+
+            # face recognition results came back
             if not results.empty():
                 faces = results.get(block=False)
                 currently_recognizing = False
@@ -41,11 +47,14 @@ def run():
             #if image.id % CONFIG["recognition"]["database"]["backup_frequency"] == 0:
             #    tasks.put(BackupFaceDatabase())
 
-            #if image.id % 15 == 0 and image.id > 0:
-            if not currently_recognizing:
+            if image.id % CONFIG["recognition"]["framerate"] == 0 and image.id > 0:
+                if not currently_recognizing:
                     currently_recognizing = True
                     image = CameraImage(image.id, image.data.copy())
-                    tasks.put(DetectFaces(image))
+                    tasks.put(RecognizeFaces(image))
+
+            if faces and faces.is_outdated(image.id, CONFIG["recognition"]["results_max_age"]):
+                faces = None
 
             show_frame(display, image, faces)
 

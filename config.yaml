@@ -27,7 +27,7 @@ source_settings:
 
 recognition:
   # every x frames, recognition should be run
-  framerate: 3
+  framerate: 15
   # recognition results older than x frames will be discarded
   results_max_age: 20
 
@@ -50,7 +50,7 @@ recognition:
      backup_frequency: 100  # every x frames
 
 display:
-  debug: true
+  debug: false
   fullscreen: false
   thumbnail_size: 100
   num_matches: 3
