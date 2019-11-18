@@ -1,4 +1,4 @@
-source: camera_jetson # one of camera_jetson, camera, prerecorded
+source: prerecorded # one of camera_jetson, camera, prerecorded
 
 source_settings:
   increase_brightness: 0
@@ -50,7 +50,7 @@ recognition:
      backup_frequency: 100  # every x frames
 
 display:
-  debug: false
+  debug: true
   fullscreen: false
   thumbnail_size: 100
   num_matches: 3

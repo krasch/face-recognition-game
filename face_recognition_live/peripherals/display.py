@@ -2,11 +2,14 @@ from contextlib import contextmanager
 
 import cv2
 import numpy as np
+import sdl2
+import sdl2.ext
 
 from face_recognition_live.recognition.models.landmarks import DLIB68_FACE_LOCATIONS
 from face_recognition_live.recognition.models.matching import MatchQuality
 from face_recognition_live.config import CONFIG
 from face_recognition_live.peripherals.display_utils import draw_stars, copy_object_to_location, make_round_mask
+from face_recognition_live.monitoring import monitor_runtime
 
 # BGR
 RED = (0, 0, 255)
@@ -113,9 +116,9 @@ def add_is_frontal_debug(frame, face):
     cv2.rectangle(frame, (left + BUFFER, top + BUFFER), (right + BUFFER, bottom + BUFFER), color, 2)
 
 
+@monitor_runtime
 def show_frame(display, image, recognition_result):
     frame = image.data.copy()
-
     frame.data = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
     height, width, _ = frame.shape
@@ -138,3 +141,4 @@ def show_frame(display, image, recognition_result):
 
     frame = extended_frame[BUFFER:-BUFFER, BUFFER:-BUFFER, :]
     cv2.imshow(display, frame)
+

@@ -17,8 +17,7 @@ class MatchQuality(Enum):
     POOR = 3
     NO_MATCH = 4
 
-
-MatchingFace = namedtuple("MatchResult", ["face", "distance", "quality"])
+MatchingFace = namedtuple("MatchingFace", ["face", "distance", "quality"])
 
 
 class MATCHING_METHOD(Enum):
