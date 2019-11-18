@@ -61,10 +61,13 @@ class RecognitionProcess(WorkerProcess):
     def __init__(self, task_queue, result_queue, error_queue):
         super(RecognitionProcess, self).__init__(task_queue, result_queue, error_queue)
 
-        self.models = init_model_stack()
+        self.models = None
         self.face_database = FaceDatabase(CONFIG["recognition"]["database"]["location"])
 
     def execute_task(self, task):
+        if not self.models:
+            self.models = init_model_stack()
+
         if isinstance(task, RecognizeFaces):
             faces = self.__detect_faces(task.image.data)
             if len(faces) > 0:

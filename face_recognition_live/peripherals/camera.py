@@ -118,7 +118,7 @@ def init_camera():
         while True:
             has_image, image = camera.read()
             if has_image:
-                image = increase_brightness(image, CONFIG["source_settings"]["increase_brightness"])
+                # image = increase_brightness(image, CONFIG["source_settings"]["increase_brightness"])
                 if CONFIG["source_settings"]["mirror"]:
                     image = cv2.flip(image, 1)
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
