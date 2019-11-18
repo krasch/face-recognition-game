@@ -1,4 +1,4 @@
-source: prerecorded # one of camera_jetson, camera, prerecorded
+source: camera_jetson # one of camera_jetson, camera, prerecorded
 
 source_settings:
   increase_brightness: 0
@@ -12,7 +12,7 @@ source_settings:
     display_height: 720
     flip: 0
     zoom: 1.00
-    framerate: 15
+    framerate: 25
 
   # only used with usb/builtin camera, no live-reload
   camera:
@@ -27,7 +27,7 @@ source_settings:
 
 recognition:
   # every x frames, recognition should be run
-  framerate: 15
+  framerate: 10
   # recognition results older than x frames will be discarded
   results_max_age: 20
 

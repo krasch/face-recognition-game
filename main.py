@@ -53,8 +53,8 @@ def run():
                     image = CameraImage(image.id, image.data.copy())
                     tasks.put(RecognizeFaces(image))
 
-            if faces and faces.is_outdated(image.id, CONFIG["recognition"]["results_max_age"]):
-                faces = None
+            #if faces and faces.is_outdated(image.id, CONFIG["recognition"]["results_max_age"]):
+            #    faces = None
 
             show_frame(display, image, faces)
 

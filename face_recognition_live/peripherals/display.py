@@ -60,7 +60,7 @@ def add_matches(frame, face, config):
 
     def add_thumbnail(x, y, thumbnail):
         thumbnail = cv2.resize(thumbnail, (thumbnail_size, thumbnail_size))
-        thumbnail = cv2.cvtColor(thumbnail, cv2.COLOR_RGB2RGBA)
+        thumbnail = cv2.cvtColor(thumbnail, cv2.COLOR_RGB2BGRA)
         mask = make_round_mask(thumbnail_size)
         copy_object_to_location(frame, thumbnail, x, y, mask)
         cv2.circle(frame, (x + radius, y + radius), radius, WHITE, thickness=2)
@@ -112,10 +112,13 @@ def add_is_frontal_debug(frame, face):
     cv2.rectangle(frame, (left + BUFFER, top + BUFFER), (right + BUFFER, bottom + BUFFER), color, 2)
 
 
-@monitor_runtime
+#@monitor_runtime
 def show_frame(display, image, recognition_result):
     frame = image.data
-    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2RGBA)
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGRA)
+    
+    if recognition_result:
+        cv2.imshow(display, frame)
 
     height, width, _ = frame.shape
     extended_frame = np.zeros((height + BUFFER*2, width+BUFFER*2, 4), np.uint8)
@@ -136,6 +139,6 @@ def show_frame(display, image, recognition_result):
                     cv2.FONT_HERSHEY_SIMPLEX, 1.0, WHITE, lineType=cv2.LINE_AA)
 
     frame = extended_frame[BUFFER:-BUFFER, BUFFER:-BUFFER, :]
-    frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2BGRA)
+    # frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2BGRA)
     cv2.imshow(display, frame)
 
