@@ -12,6 +12,12 @@ class DETECTION_MODEL(Enum):
     CNN = 2
 
 
+def sort_bounding_boxes_by_size(boxes):
+    sizes = [(b.bottom() - b.top()) * (b.right() - b.left()) for b in boxes]
+    boxes, _ = zip(*sorted(zip(boxes, sizes), key=lambda item: item[1], reverse=True))
+    return boxes
+
+
 def init_face_detector(model_type: DETECTION_MODEL, model_dir: Path):
     if model_type == DETECTION_MODEL.HOG:
         detector = init_face_detector_hog()
@@ -30,14 +36,18 @@ def init_face_detector(model_type: DETECTION_MODEL, model_dir: Path):
         return rect.left() > 0 and rect.right() < image_width and rect.top() > 0 and rect.bottom() < image_height
 
     def run(rgb_image):
-        scale = CONFIG["recognition"]["models"]["face_detection"]["scale"]
+        config = CONFIG["recognition"]["models"]["face_detection"]
+        scale = config["scale"]
         small_image = cv2.resize(rgb_image, (0, 0), fx=scale, fy=scale)
         result = detector(small_image)
 
         height, width = small_image.shape[0], small_image.shape[1]
         result = [r for r in result if fully_inside_image(r, width, height)]
+        result = [unscale(r) for r in result]
+        result = sort_bounding_boxes_by_size(result)
+        result = result[0: config["max_num_faces"]]
 
-        return [unscale(r) for r in result]
+        return result
 
     return run
 
