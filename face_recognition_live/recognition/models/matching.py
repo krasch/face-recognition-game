@@ -5,17 +5,12 @@ from collections import namedtuple
 from face_recognition_live.config import CONFIG
 
 
-class MatchResultOverall(Enum):
-    NEW_FACE = 1
-    KNOWN_FACE = 2
-    NO_MATCH = 3
-
-
 class MatchQuality(Enum):
     EXCELLENT = 1
     GOOD = 2
     POOR = 3
     NO_MATCH = 4
+
 
 MatchingFace = namedtuple("MatchingFace", ["face", "distance", "quality"])
 
@@ -59,12 +54,8 @@ def init_matching(matching_method):
         distances = [calculate_distance(features, face.features) for face in known_faces]
         order = np.argsort(distances)
 
-        # even the best match is not near any known face
-        if len(distances) == 0 or distances[order[0]] > config["new_face_cutoff"]:
-            return MatchResultOverall.NEW_FACE, None
-
         matches = [MatchingFace(known_faces[d], distances[d], get_match_quality(distances[d], config)) for d in order]
-        return MatchResultOverall.KNOWN_FACE, matches
+        return matches
 
     return find_best_match
 

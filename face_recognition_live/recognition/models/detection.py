@@ -13,6 +13,9 @@ class DETECTION_MODEL(Enum):
 
 
 def sort_bounding_boxes_by_size(boxes):
+    if boxes is None or len(boxes) == 0:
+        return boxes
+
     sizes = [(b.bottom() - b.top()) * (b.right() - b.left()) for b in boxes]
     boxes, _ = zip(*sorted(zip(boxes, sizes), key=lambda item: item[1], reverse=True))
     return boxes

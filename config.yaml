@@ -28,8 +28,6 @@ source_settings:
 recognition:
   # every x frames, recognition should be run
   framerate: 10
-  # recognition results older than x frames will be discarded
-  results_max_age: 20
 
   models:
      directory: "models" # no live-reload
@@ -51,11 +49,14 @@ recognition:
      backup_frequency: 100  # every x frames
 
 display:
-  debug: false
+  debug: true
   fullscreen: false
-  thumbnail_size: 100
+  thumbnail_size: 75
+  stars_height: 20
   num_matches: 3
   num_matches_debug: 3
+  max_age_recognition_result: 1000   # in milliseconds
+  display_time_registration_result: 3000  # milliseconds
 
 
 

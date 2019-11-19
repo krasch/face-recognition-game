@@ -1,22 +1,40 @@
-class Result:
-    def __init__(self, image_id):
-        self.id = image_id
+from datetime import datetime
 
-    def is_outdated(self, current_id, time_to_live):
-        age = current_id - self.id
+
+class Result:
+    def __init__(self):
+        self.timestamp = datetime.now()
+
+    def is_outdated(self, time_to_live):
+        now = datetime.now()
+        age = now - self.timestamp
+        age = age.seconds * 1000.0 + age.microseconds / 1000.0
         return age > time_to_live
 
 
 class CameraImage(Result):
     def __init__(self, image_id, image):
-        super().__init__(image_id)
+        super().__init__()
+        self.id = image_id
         self.data = image
 
 
 class RecognitionResult(Result):
-    def __init__(self, image_id, faces):
-        super().__init__(image_id)
+    def __init__(self, faces):
+        super().__init__()
         self.faces = faces
+
+
+class RegistrationResult(Result):
+    def __init__(self, thumbnails):
+        super().__init__()
+        self.thumbnails = thumbnails
+
+
+class UnregistrationResult(Result):
+    def __init__(self, thumbnails):
+        super().__init__()
+        self.thumbnails = thumbnails
 
 
 class Error:

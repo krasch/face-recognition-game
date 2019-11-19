@@ -9,3 +9,11 @@ class BackupFaceDatabase:
 
 class Shutdown:
     pass
+
+
+class RegisterFaces:
+    def __init__(self, faces):
+        self.recognition_result = faces
+
+class UnregisterMostRecentFaces:
+    pass

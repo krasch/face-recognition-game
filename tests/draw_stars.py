@@ -12,7 +12,7 @@ font = ImageFont.truetype("OpenSansEmoji.ttf", 40)
 
 
 def draw_stars(num_stars):
-    image = np.ones((30, 92, 4), np.uint8)
+    image = np.ones((30, 90, 4), np.uint8)
     image = Image.fromarray(image)
     draw = ImageDraw.Draw(image)
     draw.text((0, -12), STARS[num_stars], font=font)

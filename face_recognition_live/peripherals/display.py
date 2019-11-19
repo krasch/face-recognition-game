@@ -3,9 +3,10 @@ from contextlib import contextmanager
 import cv2
 import numpy as np
 
-from face_recognition_live.recognition.models.landmarks import DLIB68_FACE_LOCATIONS
-from face_recognition_live.recognition.models.matching import MatchQuality
 from face_recognition_live.config import CONFIG
+from face_recognition_live.recognition.models.matching import MatchQuality
+from face_recognition_live.recognition.models.landmarks import DLIB68_FACE_LOCATIONS
+from face_recognition_live.events.results import RegistrationResult, UnregistrationResult
 from face_recognition_live.peripherals.display_utils import draw_stars, copy_object_to_location, make_round_mask
 from face_recognition_live.monitoring import monitor_runtime
 
@@ -15,11 +16,15 @@ GREEN = (0, 255, 0)
 GREY = (125, 125, 125)
 WHITE = (255, 255, 255)
 
+FONT = cv2.FONT_HERSHEY_SIMPLEX
+
 LANDMARKS = [DLIB68_FACE_LOCATIONS.NOSE_TIP,
              DLIB68_FACE_LOCATIONS.LEFT_EYE_LEFT_CORNER, DLIB68_FACE_LOCATIONS.RIGHT_EYE_RIGHT_CORNER,
              DLIB68_FACE_LOCATIONS.MOUTH_LEFT, DLIB68_FACE_LOCATIONS.MOUTH_RIGHT]
 
 BUFFER = 200
+DIST_BOX_THUMBNAIL = 10
+DIST_THUMBNAIL_STARS = 5
 
 
 @contextmanager
@@ -37,8 +42,7 @@ def init_display():
         cv2.destroyWindow(name)
 
 
-def add_bounding_box(frame, face):
-    box = face.bounding_box
+def add_bounding_box(frame, box):
     cv2.rectangle(frame, (box.left() + BUFFER, box.top()+BUFFER), (box.right()+BUFFER, box.bottom()+BUFFER), WHITE, 2)
 
 
@@ -48,57 +52,43 @@ def add_landmarks(frame, face):
         cv2.circle(frame, location, 2, WHITE, -1)
 
 
-def add_matches(frame, face, config):
-    height, width, _ = frame.shape
-    thumbnail_size = config["thumbnail_size"]
+def calculate_thumbnail_locations(leftmost, top, num_thumbnails, thumbnail_size):
+    dist_x = int(0.25 * thumbnail_size)
+
+    def calculate_x(i):
+        return leftmost + (thumbnail_size + dist_x) * i + BUFFER
+
+    y = top + BUFFER
+    return [(calculate_x(i), y) for i in range(num_thumbnails)]
+
+
+def add_thumbnail(frame, x, y, thumbnail, thumbnail_size):
     radius = int(thumbnail_size / 2.0)
+    y = y - thumbnail_size - DIST_BOX_THUMBNAIL
 
-    def calculate_thumbnail_center(thumbnail_index):
-        x = face.bounding_box.left() + (thumbnail_size + 25) * thumbnail_index
-        y = face.bounding_box.top() - int(thumbnail_size * 1.2)
-        return x + BUFFER, y + BUFFER
+    thumbnail = cv2.resize(thumbnail, (thumbnail_size, thumbnail_size))
+    thumbnail = cv2.cvtColor(thumbnail, cv2.COLOR_RGB2BGRA)
 
-    def add_thumbnail(x, y, thumbnail):
-        thumbnail = cv2.resize(thumbnail, (thumbnail_size, thumbnail_size))
-        thumbnail = cv2.cvtColor(thumbnail, cv2.COLOR_RGB2BGRA)
-        mask = make_round_mask(thumbnail_size)
-        copy_object_to_location(frame, thumbnail, x, y, mask)
-        cv2.circle(frame, (x + radius, y + radius), radius, WHITE, thickness=2)
+    mask = make_round_mask(thumbnail_size)
+    copy_object_to_location(frame, thumbnail, x, y, mask)
 
-    def add_match_stars(x, y, match_quality):
-        y = y - radius + 5
+    cv2.circle(frame, (x + radius, y + radius), radius, WHITE, thickness=1)
 
-        if match_quality == MatchQuality.EXCELLENT:
-            return draw_stars(frame, x, y, 3)
-        elif match_quality == MatchQuality.GOOD:
-            return draw_stars(frame, x, y, 2)
-        elif match_quality == MatchQuality.POOR:
-            return draw_stars(frame, x, y, 1)
-        else:
-            return draw_stars(frame, x, y, 0)
 
-    def add_match_distance(x, y, match_distance):
-        y = y - radius - 5
-        match_distance = np.round(match_distance, 2)
-        cv2.putText(frame, str(match_distance), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, lineType=cv2.LINE_AA)
-
-    # in debug mode display many matches, in all qualities
-    # in not debug mode only display the best x okayish matches
-    if config["debug"]:
-        matches = face.matches[:config["num_matches_debug"]]
+def add_match_stars(frame, x, y, match_quality, stars_height):
+    if match_quality == MatchQuality.EXCELLENT:
+        return draw_stars(frame, x, y, 3, stars_height)
+    elif match_quality == MatchQuality.GOOD:
+        return draw_stars(frame, x, y, 2, stars_height)
+    elif match_quality == MatchQuality.POOR:
+        return draw_stars(frame, x, y, 1, stars_height)
     else:
-        matches = [m for m in face.matches if m.quality != MatchQuality.NO_MATCH]
-        matches = matches[:config["num_matches"]]
+        return draw_stars(frame, x, y, 0, stars_height)
 
-    for i, match in enumerate(matches):
-        center_x, center_y = calculate_thumbnail_center(i)
-        add_thumbnail(center_x, center_y, match.face.image)
-        add_match_stars(center_x, center_y, match.quality)
 
-        if config["debug"]:
-            add_match_distance(center_x, center_y, match.distance)
-
-    return frame
+def add_match_distance(frame, x, y, match_distance):
+    match_distance = np.round(match_distance, 2)
+    cv2.putText(frame, str(match_distance), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, lineType=cv2.LINE_AA)
 
 
 def add_is_frontal_debug(frame, face):
@@ -112,33 +102,98 @@ def add_is_frontal_debug(frame, face):
     cv2.rectangle(frame, (left + BUFFER, top + BUFFER), (right + BUFFER, bottom + BUFFER), color, 2)
 
 
-#@monitor_runtime
-def show_frame(display, image, recognition_result):
-    frame = image.data
-    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGRA)
+def filter_matches(matches):
+    if CONFIG["display"]["debug"]:
+        matches = matches[:CONFIG["display"]["num_matches_debug"]]
+    else:
+        matches = [m for m in matches if m.quality != MatchQuality.NO_MATCH]
+        matches = matches[:CONFIG["display"]["num_matches"]]
+    return matches
+
+
+def add_recognition_result(frame, recognition_result):
+    thumbnail_size = CONFIG["display"]["thumbnail_size"]
+    stars_height = CONFIG["display"]["stars_height"]
+    debug = CONFIG["display"]["debug"]
+
+    for face in recognition_result.faces:
+        box = face.bounding_box
+        add_bounding_box(frame, box)
+
+        if face.matches:
+            matches = filter_matches(face.matches)
+            thumbnail_locations = calculate_thumbnail_locations(box.left(), box.top(), len(matches), thumbnail_size)
+
+            for match, (x, y) in zip(matches, thumbnail_locations):
+                add_thumbnail(frame, x, y, match.face.thumbnail, thumbnail_size)
+                y_stars = y - thumbnail_size - DIST_BOX_THUMBNAIL - stars_height
+                add_match_stars(frame, x, y_stars, match.quality, stars_height)
+
+                if debug:
+                    y_distance = y - thumbnail_size - DIST_BOX_THUMBNAIL - stars_height - DIST_THUMBNAIL_STARS
+                    add_match_distance(frame, x, y_distance, match.distance)
+
+
+def add_registration_info(frame, registration_result):
+    thumbnail_size = CONFIG["display"]["thumbnail_size"]
+    height, width, _ = frame.shape
+
+    x = 10
+    y_thumbnail_top = height - BUFFER * 2
+    y_text = height - BUFFER - thumbnail_size - DIST_BOX_THUMBNAIL * 2  # seems arbitrary
+
+    if isinstance(registration_result, RegistrationResult):
+        text_positive = "Neu registriert"
+        text_negative = "Niemand registiert :-("
+    else:
+        text_positive = "Entfernt:"
+        text_negative = "Niemand entfernt :-("
+
+    if len(registration_result.thumbnails) == 0:
+        cv2.putText(frame, text_negative, (x + BUFFER, y_text), FONT, 0.5, WHITE, lineType=cv2.LINE_AA)
+        return
+
+    cv2.putText(frame, text_positive, (x + BUFFER, y_text), FONT, 0.5, WHITE, lineType=cv2.LINE_AA)
+    thumbnail_locations = calculate_thumbnail_locations(x, y_thumbnail_top, len(registration_result.thumbnails), thumbnail_size)
+    for face, (x, y) in zip(registration_result.thumbnails, thumbnail_locations):
+        add_thumbnail(frame, x, y, face, thumbnail_size)
+
+
+def store_data(image, recognition_result):
+    import pickle
+    if image.id == 85:
+        with open("tests/data/display_test/data.pkl", "wb") as f:
+            pickle.dump({"image": image, "recognition_result": recognition_result}, f)
+
+
+def extend_frame(frame):
+    height, width, _ = frame.shape
+    extended_frame = np.zeros((height + BUFFER*2, width+BUFFER*2, 4), np.uint8)
+    extended_frame[BUFFER: height+BUFFER, BUFFER:width+BUFFER, :] = frame
+    return extended_frame
+
+
+def reverse_frame_extension(frame):
+    return frame[BUFFER:-BUFFER, BUFFER:-BUFFER, :]
+
+
+#from profilehooks import profile
+#@profile
+def show_frame(display, image, recognition_result, registration_info):
+    frame = cv2.cvtColor(image.data, cv2.COLOR_RGB2BGRA)
     
     if recognition_result:
         cv2.imshow(display, frame)
 
-    height, width, _ = frame.shape
-    extended_frame = np.zeros((height + BUFFER*2, width+BUFFER*2, 4), np.uint8)
-    extended_frame[BUFFER: height+BUFFER, BUFFER:width+BUFFER, :] = frame
-
-    if recognition_result:
-        for face in recognition_result.faces:
-            add_bounding_box(extended_frame, face)
-            if face.matches:
-                extended_frame = add_matches(extended_frame, face, CONFIG["display"])
-
-            if CONFIG["display"]["debug"]:
-                add_is_frontal_debug(extended_frame, face)
-                add_landmarks(extended_frame, face)
+    frame = extend_frame(frame)
+    if recognition_result is not None:
+        add_recognition_result(frame, recognition_result)
+    if registration_info is not None:
+        add_registration_info(frame, registration_info)
 
     if CONFIG["display"]["debug"]:
-        cv2.putText(extended_frame, str(image.id), (20 + BUFFER, 30 + BUFFER),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, WHITE, lineType=cv2.LINE_AA)
+        cv2.putText(frame, str(image.id), (20 + BUFFER, 30 + BUFFER), FONT, 1.0, WHITE, lineType=cv2.LINE_AA)
 
-    frame = extended_frame[BUFFER:-BUFFER, BUFFER:-BUFFER, :]
-    # frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2BGRA)
+    frame = reverse_frame_extension(frame)
     cv2.imshow(display, frame)
 

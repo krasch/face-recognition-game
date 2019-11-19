@@ -10,7 +10,6 @@ from face_recognition_live.events.tasks import *
 from face_recognition_live.events.results import *
 from face_recognition_live.database import FaceDatabase
 from face_recognition_live.recognition.models import init_model_stack
-from face_recognition_live.recognition.models.matching import MatchResultOverall
 from face_recognition_live.recognition.face import Face
 from face_recognition_live.monitoring import monitor_runtime
 
@@ -74,10 +73,22 @@ class RecognitionProcess(WorkerProcess):
                 self._crop(task.image.data, faces)
                 self._extract_features(faces)
                 self._find_matches(faces)
-            return RecognitionResult(task.image.id, faces)
+            return RecognitionResult(faces)
 
         elif isinstance(task, BackupFaceDatabase):
             self.face_database.store()
+
+        elif isinstance(task, RegisterFaces):
+            if task.recognition_result is None or task.recognition_result.faces is None:
+                return RegistrationResult(thumbnails=[])
+
+            self.face_database.add_all(task.recognition_result.faces)
+            registered = [face.thumbnail for face in task.recognition_result.faces]
+            return RegistrationResult(thumbnails=registered)
+
+        elif isinstance(task, UnregisterMostRecentFaces):
+            unregistered = self.face_database.remove_most_recent()
+            return UnregistrationResult(thumbnails=unregistered)
 
         else:
             raise NotImplementedError()
@@ -85,7 +96,8 @@ class RecognitionProcess(WorkerProcess):
     @monitor_runtime
     def __detect_faces(self, image):
         bounding_boxes = self.models.detect_faces(image)
-        faces = [Face(bounding_box=box) for box in bounding_boxes]
+        thumbnails = [image[box.top(): box.bottom(), box.left(): box.right(), :] for box in bounding_boxes]
+        faces = [Face(bounding_box=box, thumbnail = thumbnail) for box, thumbnail in zip(bounding_boxes, thumbnails)]
         return faces
 
     @monitor_runtime
@@ -104,15 +116,7 @@ class RecognitionProcess(WorkerProcess):
     @monitor_runtime
     def _find_matches(self, faces):
         for face in faces:
-            match_status, matches = self.models.match_faces(face.features, self.face_database.faces)
-
-            if match_status == MatchResultOverall.NEW_FACE:
-                if face.frontal.is_frontal:
-                    print("Adding face to database")
-                    self.face_database.add(face.features, face.crop)
-            else:
-                # self._monitoring.add("distances", [m.distance for m in matches])  # todo move to matching
-                face.matches = matches
+            face.matches = self.models.match_faces(face.features, self.face_database.faces)
 
 
 @contextmanager
