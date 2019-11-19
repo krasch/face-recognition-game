@@ -80,6 +80,9 @@ def run():
                         image = CameraImage(image.id, image.data.copy())
                         tasks.put(RecognizeFaces(image))
 
+                if image.id % CONFIG["recognition"]["database"]["backup_frequency"] == 0:
+                    tasks.put(BackupFaceDatabase())
+
                 # clean up older data
                 if recognition_result is not None and recognition_result.is_outdated(config["max_age_recognition_result"]):
                     recognition_result = None
@@ -88,6 +91,7 @@ def run():
 
                 # display the new image
                 show_frame(display, image, recognition_result, registration_result)
+
 
             else:
                 raise NotImplementedError()

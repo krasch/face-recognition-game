@@ -4,11 +4,14 @@ import datetime
 import pickle
 from pathlib import Path
 
+from face_recognition_live.monitoring import monitor_runtime
+
 
 StoredFace = namedtuple("StoredFace", ["group_id", "timestamp", "features", "thumbnail"])
 
 
 class FaceDatabase:
+
     def __init__(self, database_file):
         self.database_file = Path(database_file)
 
@@ -36,6 +39,7 @@ class FaceDatabase:
         self.faces = [face for i, face in enumerate(self.faces) if i not in to_remove]
         return removed_thumbnails
 
+    @monitor_runtime
     def store(self):
         # only keep 1000 newest people
         self.faces = self.faces[-1000:]

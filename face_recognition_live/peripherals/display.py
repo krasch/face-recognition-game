@@ -177,8 +177,28 @@ def reverse_frame_extension(frame):
     return frame[BUFFER:-BUFFER, BUFFER:-BUFFER, :]
 
 
-#from profilehooks import profile
-#@profile
+def add_black_bars(frame):
+    display_width = CONFIG["display"]["width"]
+    display_height = CONFIG["display"]["height"]
+
+    frame_height, frame_width, _ = frame.shape
+    print(display_width, display_height)
+    print(frame_width, frame_height)
+    if frame_height > display_height or frame_width > display_width:
+        raise NotImplementedError("Please lower screen resolution or increase camera resolution")
+
+    if frame_height == display_height and frame_width == display_width:
+        return frame
+
+    left = int(display_width / 2.0 - frame_width / 2.0)
+    top = int(display_height / 2 - frame_height / 2.0)
+    display_frame = np.zeros((display_height, display_width, 4), np.uint8)
+    display_frame[top: top + frame_height, left: left + frame_width, :] = frame
+
+    return display_frame
+
+
+@monitor_runtime
 def show_frame(display, image, recognition_result, registration_info):
     frame = cv2.cvtColor(image.data, cv2.COLOR_RGB2BGRA)
     
@@ -195,5 +215,6 @@ def show_frame(display, image, recognition_result, registration_info):
         cv2.putText(frame, str(image.id), (20 + BUFFER, 30 + BUFFER), FONT, 1.0, WHITE, lineType=cv2.LINE_AA)
 
     frame = reverse_frame_extension(frame)
+    frame = add_black_bars(frame)
     cv2.imshow(display, frame)
 
