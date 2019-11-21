@@ -7,7 +7,7 @@ from face_recognition_live.config import CONFIG
 from face_recognition_live.recognition.models.matching import MatchQuality
 from face_recognition_live.recognition.models.landmarks import DLIB68_FACE_LOCATIONS
 from face_recognition_live.events.results import RegistrationResult, UnregistrationResult
-from face_recognition_live.peripherals.display_utils import draw_stars, copy_object_to_location, make_round_mask
+from face_recognition_live.peripherals.display_utils import *
 from face_recognition_live.monitoring import monitor_runtime
 
 # BGR
@@ -62,17 +62,18 @@ def calculate_thumbnail_locations(leftmost, top, num_thumbnails, thumbnail_size)
     return [(calculate_x(i), y) for i in range(num_thumbnails)]
 
 
-def add_thumbnail(frame, x, y, thumbnail, thumbnail_size):
-    radius = int(thumbnail_size / 2.0)
+def add_thumbnail(frame, x, y, person, thumbnail_size):
     y = y - thumbnail_size - DIST_BOX_THUMBNAIL
 
-    thumbnail = cv2.resize(thumbnail, (thumbnail_size, thumbnail_size))
-    thumbnail = cv2.cvtColor(thumbnail, cv2.COLOR_RGB2BGRA)
-
+    thumbnail = get_thumbnail(person, thumbnail_size)
     mask = make_round_mask(thumbnail_size)
     copy_object_to_location(frame, thumbnail, x, y, mask)
 
-    cv2.circle(frame, (x + radius, y + radius), radius, WHITE, thickness=1)
+
+def draw_stars(frame, x, y, num_stars, stars_height):
+    stars = get_stars(num_stars, stars_height)
+    alpha = stars[:, :, 3:4].astype(float) / 255
+    copy_object_to_location(frame, stars, x, y, 1-alpha)
 
 
 def add_match_stars(frame, x, y, match_quality, stars_height):
@@ -125,7 +126,7 @@ def add_recognition_result(frame, recognition_result):
             thumbnail_locations = calculate_thumbnail_locations(box.left(), box.top(), len(matches), thumbnail_size)
 
             for match, (x, y) in zip(matches, thumbnail_locations):
-                add_thumbnail(frame, x, y, match.face.thumbnail, thumbnail_size)
+                add_thumbnail(frame, x, y, match.face, thumbnail_size)
                 y_stars = y - thumbnail_size - DIST_BOX_THUMBNAIL - stars_height
                 add_match_stars(frame, x, y_stars, match.quality, stars_height)
 
@@ -149,13 +150,13 @@ def add_registration_info(frame, registration_result):
         text_positive = "Entfernt:"
         text_negative = "Niemand entfernt :-("
 
-    if len(registration_result.thumbnails) == 0:
+    if len(registration_result.persons) == 0:
         cv2.putText(frame, text_negative, (x + BUFFER, y_text), FONT, 0.5, WHITE, lineType=cv2.LINE_AA)
         return
 
     cv2.putText(frame, text_positive, (x + BUFFER, y_text), FONT, 0.5, WHITE, lineType=cv2.LINE_AA)
-    thumbnail_locations = calculate_thumbnail_locations(x, y_thumbnail_top, len(registration_result.thumbnails), thumbnail_size)
-    for face, (x, y) in zip(registration_result.thumbnails, thumbnail_locations):
+    thumbnail_locations = calculate_thumbnail_locations(x, y_thumbnail_top, len(registration_result.persons), thumbnail_size)
+    for face, (x, y) in zip(registration_result.persons, thumbnail_locations):
         add_thumbnail(frame, x, y, face, thumbnail_size)
 
 
@@ -182,8 +183,6 @@ def add_black_bars(frame):
     display_height = CONFIG["display"]["height"]
 
     frame_height, frame_width, _ = frame.shape
-    print(display_width, display_height)
-    print(frame_width, frame_height)
     if frame_height > display_height or frame_width > display_width:
         raise NotImplementedError("Please lower screen resolution or increase camera resolution")
 
@@ -200,21 +199,21 @@ def add_black_bars(frame):
 
 @monitor_runtime
 def show_frame(display, image, recognition_result, registration_info):
-    frame = cv2.cvtColor(image.data, cv2.COLOR_RGB2BGRA)
-    
-    if recognition_result:
-        cv2.imshow(display, frame)
+    frame = image.data
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2RGBA)
 
-    frame = extend_frame(frame)
-    if recognition_result is not None:
-        add_recognition_result(frame, recognition_result)
-    if registration_info is not None:
-        add_registration_info(frame, registration_info)
+    if recognition_result or registration_info:
+        frame = extend_frame(frame)
+        if recognition_result is not None:
+            add_recognition_result(frame, recognition_result)
+        if registration_info is not None:
+            add_registration_info(frame, registration_info)
 
-    if CONFIG["display"]["debug"]:
-        cv2.putText(frame, str(image.id), (20 + BUFFER, 30 + BUFFER), FONT, 1.0, WHITE, lineType=cv2.LINE_AA)
+        if CONFIG["display"]["debug"]:
+            cv2.putText(frame, str(image.id), (20 + BUFFER, 30 + BUFFER), FONT, 1.0, WHITE, lineType=cv2.LINE_AA)
 
-    frame = reverse_frame_extension(frame)
+        frame = reverse_frame_extension(frame)
+
     frame = add_black_bars(frame)
     cv2.imshow(display, frame)
 

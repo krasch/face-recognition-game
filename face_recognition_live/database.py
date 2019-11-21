@@ -7,7 +7,16 @@ from pathlib import Path
 from face_recognition_live.monitoring import monitor_runtime
 
 
-StoredFace = namedtuple("StoredFace", ["group_id", "timestamp", "features", "thumbnail"])
+class StoredFace:
+    def __init__(self, group_id, features, thumbnail):
+        self.group_id = group_id
+        self.features = features
+        self.image = thumbnail
+        self.timestamp = datetime.datetime.now()
+        self.id = uuid4()
+
+    def belongs_to_group(self, group_id):
+        return self.group_id == group_id
 
 
 class FaceDatabase:
@@ -22,22 +31,22 @@ class FaceDatabase:
 
     def add_all(self, faces):
         group_id = uuid4()
+        registered = []
         for face in faces:
-            self._add(group_id, face.features, face.thumbnail)
-
-    def _add(self, group_id, features, thumbnail):
-        timestamp = datetime.datetime.now()
-        self.faces.append(StoredFace(group_id, timestamp, features, thumbnail))
+            face = StoredFace(group_id, face.features, face.thumbnail)
+            self.faces.append(face)
+            registered.append(face)
+        return registered
 
     def remove_most_recent(self):
         if len(self.faces) == 0:
             return []
 
         most_recent_group_id = self.faces[-1].group_id
-        to_remove = [i for i, face in enumerate(self.faces) if face.group_id == most_recent_group_id]
-        removed_thumbnails = [self.faces[i].thumbnail for i in to_remove]
+        to_remove = [i for i, face in enumerate(self.faces) if face.belongs_to_group(most_recent_group_id)]
+        removed_faces = [self.faces[i] for i in to_remove]
         self.faces = [face for i, face in enumerate(self.faces) if i not in to_remove]
-        return removed_thumbnails
+        return removed_faces
 
     @monitor_runtime
     def store(self):

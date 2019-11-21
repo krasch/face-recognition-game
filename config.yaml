@@ -44,7 +44,7 @@ recognition:
        poor_match_cutoff: 0.6
 
   database:
-     location: "test.pkl"  # no live-reload
+     location: "database.pkl"  # no live-reload
      backup_frequency: 100  # every x frames
 
 display:
@@ -57,7 +57,7 @@ display:
   thumbnail_size: 75
   stars_height: 20
   num_matches: 3
-  num_matches_debug: 3
+  num_matches_debug: 5
 
   max_age_recognition_result: 1000   # in milliseconds
   display_time_registration_result: 3000  # milliseconds

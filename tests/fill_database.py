@@ -9,7 +9,7 @@ from face_recognition_live.recognition.face import Face
 from face_recognition_live.database import FaceDatabase
 
 image = cv2.imread("tests/data/generated/1.png")
-image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+#image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
 models = init_model_stack()
 
@@ -24,7 +24,7 @@ face.features = models.extract_features(np.array([face.crop]))[0]
 from profilehooks import profile
 @profile
 def bla():
-    db = FaceDatabase("test.pkl")
+    db = FaceDatabase("database.pkl")
 
     for i in range(1000):
         db.add_all([face])

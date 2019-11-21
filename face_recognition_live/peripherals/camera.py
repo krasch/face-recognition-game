@@ -33,8 +33,8 @@ def init_jetson_video_capture():
             f'format=(string)NV12, framerate=(fraction){framerate}/1 ! ' +
             #f'nvvidconv flip-method={flip} ! ' +
             f'nvvidconv flip-method={flip} left={crop_left} right={crop_right} top={crop_top} bottom={crop_bottom} ! ' +
-            f'video/x-raw, width=(int){display_width}, height=(int){display_height}, format=(string)BGRx ! ' +
-            'videoconvert ! video/x-raw, format=(string)BGR ! appsink'
+            f'video/x-raw, width=(int){display_width}, height=(int){display_height}, format=(string)RGBx ! ' +
+            'videoconvert ! video/x-raw, format=(string)RGB ! appsink'
             )
 
     return cv2.VideoCapture(gstreamer_config, cv2.CAP_GSTREAMER)
@@ -121,7 +121,7 @@ def init_camera():
                 # image = increase_brightness(image, CONFIG["source_settings"]["increase_brightness"])
                 if CONFIG["source_settings"]["mirror"]:
                     image = cv2.flip(image, 1)
-                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 yield CameraImage(counter, np.array(image.data).copy())
                 counter = (counter + 1) % 10000
 

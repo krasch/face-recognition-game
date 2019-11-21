@@ -1,40 +1,86 @@
 import cv2
 import numpy as np
 
+from face_recognition_live.monitoring import monitor_runtime
 
-# only prepare mask once for every diameter
+
+WHITE = (255, 255, 255)
+
+
+MASKS = {}
+STARS_RESIZED = {0: {}, 1: {}, 2: {}, 3: {}}
+
+
 def make_round_mask(diameter):
+    radius = int(diameter / 2.0)
+    center_x = radius
+    center_y = radius
+
+    mask = np.zeros((diameter, diameter, 1), np.uint8)
+    mask.fill(255)
+    cv2.circle(mask, (center_x, center_y), radius, 3, thickness=-1)
+    return mask / 255.0
+
+
+def create_thumbnail(image, thumbnail_size):
+    radius = int(thumbnail_size / 2.0)
+    center_x = radius
+    center_y = radius
+
+    thumbnail = cv2.resize(image, (thumbnail_size, thumbnail_size))
+    cv2.circle(thumbnail, (center_x, center_y), radius, WHITE, thickness=1)
+
+    return thumbnail
+
+
+def init_thumbnail_cache():
+    cache = {}
+    thumbnail_size_used_in_cache = None
+
+    def get_thumbnail(person, thumbnail_size):
+        nonlocal cache
+
+        if thumbnail_size_used_in_cache is None or thumbnail_size_used_in_cache != thumbnail_size:
+            cache = {}
+
+        if len(cache) > 100:
+            cache = {}
+
+        if person.id not in cache:
+            cache[person.id] = create_thumbnail(person.image, thumbnail_size)
+
+        return cache[person.id]
+
+    return get_thumbnail
+
+
+def init_masks_cache():
     masks = {}
 
-    def make_mask():
-        radius = int(diameter / 2.0)
-        center_x = radius
-        center_y = radius
+    def get_mask(diameter):
+        if diameter not in masks:
+            masks[diameter] = make_round_mask(diameter)
+        return masks[diameter]
 
-        mask = np.zeros((diameter, diameter, 1), np.uint8)
-        mask.fill(255)
-        cv2.circle(mask, (center_x, center_y), radius, 3, thickness=-1)
-        return mask / 255.0
-
-    if diameter not in masks:
-        masks[diameter] = make_mask()
-
-    return masks[diameter]
+    return get_mask
 
 
-# only prepare stars once for every combination of num_stars and stars_height
-def get_star(num_stars, stars_height):
+def init_stars_cache():
     stars_original = {0: cv2.imread("images/stars_0.png", cv2.IMREAD_UNCHANGED),
                       1: cv2.imread("images/stars_1.png", cv2.IMREAD_UNCHANGED),
                       2: cv2.imread("images/stars_2.png", cv2.IMREAD_UNCHANGED),
                       3: cv2.imread("images/stars_3.png", cv2.IMREAD_UNCHANGED)}
+
     stars_resized = {0: {}, 1: {}, 2: {}, 3: {}}
 
-    if stars_height not in stars_resized[num_stars]:
-        s = cv2.resize(stars_original[num_stars], (stars_height*3, stars_height))
-        stars_resized[num_stars][stars_height] = s
+    def get_stars(num_stars, stars_height):
+        if stars_height not in stars_resized[num_stars]:
+            s = cv2.resize(stars_original[num_stars], (stars_height * 3, stars_height))
+            stars_resized[num_stars][stars_height] = s
 
-    return stars_resized[num_stars][stars_height]
+        return stars_resized[num_stars][stars_height]
+
+    return get_stars
 
 
 def copy_object_to_location(frame, object_to_copy, x, y, mask):
@@ -49,9 +95,6 @@ def copy_object_to_location(frame, object_to_copy, x, y, mask):
     frame[y: y + object_height, x: x + object_width, 0:3] = original + new
 
 
-def draw_stars(frame, x, y, num_stars, stars_height):
-    stars = get_star(num_stars, stars_height)
-    alpha = stars[:, :, 3:4].astype(float) / 255
-    copy_object_to_location(frame, stars, x, y, 1-alpha)
-
-
+get_thumbnail = init_thumbnail_cache()
+get_round_mask = init_masks_cache()
+get_stars = init_stars_cache()
