@@ -80,15 +80,14 @@ class RecognitionProcess(WorkerProcess):
 
         elif isinstance(task, RegisterFaces):
             if task.recognition_result is None or task.recognition_result.faces is None:
-                return RegistrationResult(thumbnails=[])
+                return RegistrationResult(persons=[])
 
-            self.face_database.add_all(task.recognition_result.faces)
-            registered = [face.thumbnail for face in task.recognition_result.faces]
-            return RegistrationResult(thumbnails=registered)
+            registered = self.face_database.add_all(task.recognition_result.faces)
+            return RegistrationResult(persons=registered)
 
         elif isinstance(task, UnregisterMostRecentFaces):
             unregistered = self.face_database.remove_most_recent()
-            return UnregistrationResult(thumbnails=unregistered)
+            return UnregistrationResult(persons=unregistered)
 
         else:
             raise NotImplementedError()
@@ -115,8 +114,9 @@ class RecognitionProcess(WorkerProcess):
 
     @monitor_runtime
     def _find_matches(self, faces):
+        num_matches = CONFIG["display"]["num_matches_debug"]
         for face in faces:
-            face.matches = self.models.match_faces(face.features, self.face_database.faces)
+            face.matches = self.models.match_faces(face.features, self.face_database.faces)[:num_matches]
 
 
 @contextmanager

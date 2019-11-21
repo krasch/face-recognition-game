@@ -26,15 +26,15 @@ class RecognitionResult(Result):
 
 
 class RegistrationResult(Result):
-    def __init__(self, thumbnails):
+    def __init__(self, persons):
         super().__init__()
-        self.thumbnails = thumbnails
+        self.persons = persons
 
 
 class UnregistrationResult(Result):
-    def __init__(self, thumbnails):
+    def __init__(self, persons):
         super().__init__()
-        self.thumbnails = thumbnails
+        self.persons = persons
 
 
 class Error:
