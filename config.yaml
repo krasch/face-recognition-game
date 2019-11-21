@@ -1,7 +1,6 @@
-source: prerecorded # one of camera_jetson, camera, prerecorded
+source: camera # one of camera_jetson, camera, prerecorded
 
 source_settings:
-  increase_brightness: 0
   mirror: true
 
   # only used with jetson camera, no live-reload
@@ -18,8 +17,8 @@ source_settings:
 
   # only used with pre-recorded file, no live-reload
   prerecorded:
-    #location: tests/data/generated/%d.png
-    location: tests/data/kat_im_buero/%d.png
+    location: tests/data/generated/%d.png
+    #location: tests/data/kat_im_buero/%d.png
     #location: tests/data/kat+petter.webm
 
 

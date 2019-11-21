@@ -4,6 +4,7 @@ import time
 from abc import abstractmethod
 
 import numpy as np
+import cv2
 
 from face_recognition_live.config import CONFIG
 from face_recognition_live.events.tasks import *
@@ -68,9 +69,12 @@ class RecognitionProcess(WorkerProcess):
             self.models = init_model_stack()
 
         if isinstance(task, RecognizeFaces):
-            faces = self.__detect_faces(task.image.data)
+            bgr_image = task.image.data
+            rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
+
+            faces = self.__detect_faces(rgb_image, bgr_image)
             if len(faces) > 0:
-                self._crop(task.image.data, faces)
+                self._crop(rgb_image, faces)
                 self._extract_features(faces)
                 self._find_matches(faces)
             return RecognitionResult(faces)
@@ -93,18 +97,18 @@ class RecognitionProcess(WorkerProcess):
             raise NotImplementedError()
 
     @monitor_runtime
-    def __detect_faces(self, image):
-        bounding_boxes = self.models.detect_faces(image)
-        thumbnails = [image[box.top(): box.bottom(), box.left(): box.right(), :] for box in bounding_boxes]
-        faces = [Face(bounding_box=box, thumbnail = thumbnail) for box, thumbnail in zip(bounding_boxes, thumbnails)]
+    def __detect_faces(self, rgb_image, bgr_image):
+        bounding_boxes = self.models.detect_faces(rgb_image)
+        thumbnails = [bgr_image[box.top(): box.bottom(), box.left(): box.right(), :] for box in bounding_boxes]
+        faces = [Face(bounding_box=box, thumbnail=thumbnail) for box, thumbnail in zip(bounding_boxes, thumbnails)]
         return faces
 
     @monitor_runtime
-    def _crop(self, image, faces):
+    def _crop(self, rgb_image, faces):
         for face in faces:
-            face.landmarks = self.models.find_landmarks(image, face.bounding_box)
+            face.landmarks = self.models.find_landmarks(rgb_image, face.bounding_box)
             face.frontal = self.models.is_frontal(face.bounding_box, face.landmarks)
-            face.crop = self.models.crop(image, face.landmarks)
+            face.crop = self.models.crop(rgb_image, face.landmarks)
 
     @monitor_runtime
     def _extract_features(self, faces):

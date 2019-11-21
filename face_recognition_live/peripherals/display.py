@@ -216,6 +216,6 @@ def show_frame(display, image, recognition_result, registration_info):
 
         frame = reverse_frame_extension(frame)
 
-    frame = add_black_bars(frame)
+    #frame = add_black_bars(frame)
     cv2.imshow(display, frame)
 

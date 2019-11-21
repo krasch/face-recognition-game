@@ -20,7 +20,7 @@ def init_feature_extractor(model_type, model_dir: Path):
         if len(faces.shape) == 1:
             return []
 
-        blob = cv2.dnn.blobFromImages(faces, 1.0 / 255, (96, 96), swapRB=False, crop=False)  # todo resize should not be necessary
+        blob = cv2.dnn.blobFromImages(faces, 1.0 / 255, (96, 96), swapRB=True, crop=False)  # todo resize should not be necessary
         feature_model.setInput(blob)
         return feature_model.forward()
 

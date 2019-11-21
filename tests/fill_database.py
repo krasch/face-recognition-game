@@ -8,7 +8,7 @@ from face_recognition_live.recognition.models import init_model_stack
 from face_recognition_live.recognition.face import Face
 from face_recognition_live.database import FaceDatabase
 
-image = cv2.imread("tests/data/generated/1.png")
+image = cv2.imread("tests/data/generated/2.png")
 #image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
 models = init_model_stack()

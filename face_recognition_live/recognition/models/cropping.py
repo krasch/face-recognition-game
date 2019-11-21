@@ -63,9 +63,9 @@ def open_face_crop(image, landmarks):
     npLandmarkIndices = OUTER_EYES_AND_NOSE
 
     H = cv2.getAffineTransform(npLandmarks[npLandmarkIndices], 96 * MINMAX_TEMPLATE[npLandmarkIndices])
-    thumbnail = cv2.warpAffine(image, H, (96, 96))
+    crop = cv2.warpAffine(image, H, (96, 96))
 
-    return thumbnail
+    return crop
 
 
 def init_face_cropper(cropping_method):

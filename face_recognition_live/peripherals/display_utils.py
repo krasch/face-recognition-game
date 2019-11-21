@@ -7,10 +7,6 @@ from face_recognition_live.monitoring import monitor_runtime
 WHITE = (255, 255, 255)
 
 
-MASKS = {}
-STARS_RESIZED = {0: {}, 1: {}, 2: {}, 3: {}}
-
-
 def make_round_mask(diameter):
     radius = int(diameter / 2.0)
     center_x = radius
