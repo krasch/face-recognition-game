@@ -50,7 +50,7 @@ display:
 
   width: 1280
   height: 720
-  fullscreen: true
+  fullscreen: false
 
   thumbnail_size: 75
   stars_height: 20

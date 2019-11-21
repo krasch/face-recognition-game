@@ -3,6 +3,7 @@ from enum import Enum
 from collections import namedtuple
 
 from face_recognition_live.config import CONFIG
+from face_recognition_live.monitoring import ProbabilitiesMonitor
 
 
 class MatchQuality(Enum):
@@ -48,6 +49,8 @@ def init_matching(matching_method):
     else:
         raise NotImplementedError()
 
+    monitor = ProbabilitiesMonitor()
+
     def find_best_match(features, known_faces):
         config = CONFIG["recognition"]["models"]["matching"]
 
@@ -55,6 +58,7 @@ def init_matching(matching_method):
         order = np.argsort(distances)
 
         matches = [MatchingFace(known_faces[d], distances[d], get_match_quality(distances[d], config)) for d in order]
+        monitor.add(matches)
         return matches
 
     return find_best_match

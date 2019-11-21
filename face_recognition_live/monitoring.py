@@ -1,6 +1,6 @@
 from functools import wraps
 from datetime import datetime
-from collections import deque, defaultdict
+from collections import deque
 from pathlib import Path
 import pickle
 import logging
@@ -46,23 +46,28 @@ def monitor_runtime(f):
     return decorated
 
 
-""""
-class MonitoringDatabase:
-    def __init__(self, name):
-        self.data = defaultdict(lambda: deque(maxlen=10000))
-        self._file = (MONITORING_PATH / name).with_suffix(".pkl")
+class ProbabilitiesMonitor:
+    def __init__(self):
         self._storage_counter = 0
+        self._file_counter = 0
+        self.data = []
 
-    def add(self, key, value):
-        self.data[key].append(value)
-        self._storage_counter += 1 % 1000
-        if self._storage_counter % 10 == 0:
+    def add(self, matches):
+        matches = matches[:100]
+        matches = [(str(m.face.id), m.distance) for m in matches]
+        self.data.append((datetime.now(), matches))
+
+        if self._storage_counter % 10000 == 0:
             self.store()
+            self._storage_counter = 0
+            self.data = []
 
     def store(self):
-        with self._file.open("wb") as f:
-            pickle.dump(dict(self.data), f)
-"""
+        file = (MONITORING_PATH / "probabilities_{}".format(self._file_counter)).with_suffix(".pkl")
+        self._file_counter += 1
+
+        with file.open("wb") as f:
+            pickle.dump(self.data, f)
 
 
 
