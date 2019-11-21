@@ -202,7 +202,7 @@ def add_black_bars(frame):
 @monitor_runtime
 def show_frame(display, image, recognition_result, registration_info):
     frame = image.data
-    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2RGBA)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
 
     if recognition_result or registration_info:
         frame = extend_frame(frame)
