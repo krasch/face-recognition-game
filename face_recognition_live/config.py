@@ -1,6 +1,7 @@
 from pathlib import Path
 from threading import Lock
 from collections import MutableMapping
+from copy import deepcopy
 
 import yaml
 
@@ -28,6 +29,11 @@ class Config(MutableMapping):
         #self._lock.acquire()
         self.config = yaml.safe_load(self.config_file.read_text())
         #self._lock.release()
+
+    def toggle_debug(self):
+        config_copy = deepcopy(self.config)
+        config_copy["display"]["debug"] = not config_copy["display"]["debug"]
+        self.config = config_copy
 
     def __setitem__(self, key, value):
         raise NotImplementedError()

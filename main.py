@@ -12,6 +12,10 @@ from face_recognition_live.events.commands import *
 from face_recognition_live.config import CONFIG
 
 
+CLICKER_LEFT_KEY = 85
+CLICKER_RIGHT_KEY = 86
+
+
 def get_next_event(camera, results, errors):
     for image in monitor_framerate(camera):
 
@@ -32,10 +36,13 @@ def get_next_event(camera, results, errors):
         if pressed_key and pressed_key == ord('c'):
             CONFIG.reload()
 
-        if pressed_key and pressed_key == ord('r'):
+        if pressed_key and pressed_key == ord('d'):
+            CONFIG.toggle_debug()
+
+        if pressed_key and pressed_key == ord('r') or pressed_key == CLICKER_RIGHT_KEY:
             yield RegisterFacesPressed()
 
-        if pressed_key and pressed_key == ord('u'):
+        if pressed_key and pressed_key == ord('u') or pressed_key == CLICKER_LEFT_KEY:
             yield UnregisterFacesPressed()
 
         # finally actually return the camera image
@@ -97,6 +104,6 @@ def run():
                 raise NotImplementedError()
 
 #logging.config.fileConfig('logging.conf')
-FORMAT = '%(asctime)s.%(msecs)03d %(name)s %(message)s'
-logging.basicConfig(level="DEBUG", format=FORMAT, datefmt='%H:%M:%S')
+#FORMAT = '%(asctime)s.%(msecs)03d %(name)s %(message)s'
+#logging.basicConfig(level="DEBUG", format=FORMAT, datefmt='%H:%M:%S')
 run()

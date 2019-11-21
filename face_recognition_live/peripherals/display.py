@@ -120,6 +120,8 @@ def add_recognition_result(frame, recognition_result):
     for face in recognition_result.faces:
         box = face.bounding_box
         add_bounding_box(frame, box)
+        if debug:
+            add_landmarks(frame, face)
 
         if face.matches:
             matches = filter_matches(face.matches)
