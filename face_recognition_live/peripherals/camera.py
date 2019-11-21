@@ -16,8 +16,8 @@ def init_jetson_video_capture():
     zoom = CONFIG["source_settings"]["camera_jetson"]["zoom"]
     framerate = CONFIG["source_settings"]["camera_jetson"]["framerate"]
 
-    display_width = CONFIG["source_settings"]["display"]["display_width"]
-    display_height = CONFIG["source_settings"]["display"]["display_height"]
+    display_width = CONFIG["display"]["width"]
+    display_height = CONFIG["display"]["height"]
 
     # calculate crop window
     # somewhat unintuitively gstreamer calculates it such that the cropped window still has capture_height*capture_width
@@ -33,10 +33,9 @@ def init_jetson_video_capture():
             f'format=(string)NV12, framerate=(fraction){framerate}/1 ! ' +
             #f'nvvidconv flip-method={flip} ! ' +
             f'nvvidconv flip-method={flip} left={crop_left} right={crop_right} top={crop_top} bottom={crop_bottom} ! ' +
-            f'video/x-raw, width=(int){display_width}, height=(int){display_height}, format=(string)RGBx ! ' +
-            'videoconvert ! video/x-raw, format=(string)RGB ! appsink'
+            f'video/x-raw, width=(int){display_width}, height=(int){display_height}, format=(string)BGRx ! ' +
+            'videoconvert ! video/x-raw, format=(string)BGR ! appsink'
             )
-
     return cv2.VideoCapture(gstreamer_config, cv2.CAP_GSTREAMER)
 
 
