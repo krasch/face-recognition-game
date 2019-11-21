@@ -8,8 +8,6 @@ source_settings:
   camera_jetson:
     width: 1280
     height: 720
-    display_width: 1280
-    display_height: 720
     flip: 0
     zoom: 1.00
     framerate: 25
@@ -52,7 +50,7 @@ display:
 
   width: 1280
   height: 720
-  fullscreen: false
+  fullscreen: true
 
   thumbnail_size: 75
   stars_height: 20

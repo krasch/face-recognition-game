@@ -16,8 +16,8 @@ def init_jetson_video_capture():
     zoom = CONFIG["source_settings"]["camera_jetson"]["zoom"]
     framerate = CONFIG["source_settings"]["camera_jetson"]["framerate"]
 
-    display_width = CONFIG["source_settings"]["camera_jetson"]["display_width"]
-    display_height = CONFIG["source_settings"]["camera_jetson"]["display_height"]
+    display_width = CONFIG["source_settings"]["display"]["display_width"]
+    display_height = CONFIG["source_settings"]["display"]["display_height"]
 
     # calculate crop window
     # somewhat unintuitively gstreamer calculates it such that the cropped window still has capture_height*capture_width
@@ -59,19 +59,6 @@ def init_file_streaming():
             self.fast_stream.release()
 
     return SlowerStream(cv2.VideoCapture(CONFIG["source_settings"]["prerecorded"]["location"]), 25)
-
-
-def increase_brightness(img, value=30):
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    h, s, v = cv2.split(hsv)
-
-    lim = 255 - value
-    v[v > lim] = 255
-    v[v <= lim] += value
-
-    final_hsv = cv2.merge((h, s, v))
-    img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
-    return img
 
 
 def monitor_framerate(camera):
@@ -118,10 +105,8 @@ def init_camera():
         while True:
             has_image, image = camera.read()
             if has_image:
-                # image = increase_brightness(image, CONFIG["source_settings"]["increase_brightness"])
                 if CONFIG["source_settings"]["mirror"]:
                     image = cv2.flip(image, 1)
-                # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 yield CameraImage(counter, np.array(image.data).copy())
                 counter = (counter + 1) % 10000
 
