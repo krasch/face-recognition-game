@@ -3,7 +3,7 @@ from multiprocessing import Queue
 import cv2
 
 from game.peripherals.camera import init_camera, monitor_framerate
-from game.peripherals.display import init_display, show_frame
+from game.peripherals.display.display import init_display, show_frame
 from game.recognition.recognition import init_recognition
 from game.events.tasks import *
 from game.events.results import *

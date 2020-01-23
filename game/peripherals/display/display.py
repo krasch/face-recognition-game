@@ -7,16 +7,12 @@ from game.config import CONFIG
 from game.recognition.models.matching import MatchQuality
 from game.recognition.models.landmarks import DLIB68_FACE_LOCATIONS
 from game.events.results import RegistrationResult, UnregistrationResult
-from game.peripherals.display_utils import *
+from game.peripherals.display import WHITE, RED, GREEN, FONT
+from game.peripherals.display.thumbnail import get_thumbnail, make_round_mask
+from game.peripherals.display.stars import get_stars
+from game.peripherals.display.display_utils import copy_object_to_location
 from game.monitoring import monitor_runtime
 
-# BGR
-RED = (0, 0, 255)
-GREEN = (0, 255, 0)
-GREY = (125, 125, 125)
-WHITE = (255, 255, 255)
-
-FONT = cv2.FONT_HERSHEY_SIMPLEX
 
 LANDMARKS = [DLIB68_FACE_LOCATIONS.NOSE_TIP,
              DLIB68_FACE_LOCATIONS.LEFT_EYE_LEFT_CORNER, DLIB68_FACE_LOCATIONS.RIGHT_EYE_RIGHT_CORNER,
