@@ -22,4 +22,4 @@ python main.py
 ```
 
 
-![BMBF logo](BMBF_gefoerdert_2017_en.png =200x)
+![BMBF logo](BMBF_gefoerdert_2017_en.png)
