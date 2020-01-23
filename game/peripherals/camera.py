@@ -1,12 +1,15 @@
 from contextlib import contextmanager
 import time
 from datetime import datetime
+import logging
 
 import cv2
 import numpy as np
 
 from game.events.results import CameraImage
 from game.config import CONFIG
+
+logger = logging.getLogger("framerate")
 
 
 def init_jetson_video_capture():
@@ -74,7 +77,7 @@ def monitor_framerate(camera):
                 delta = counter_end_time - counter_start_time
                 delta = delta.seconds + delta.microseconds / 1000.0 / 1000.0
                 framerate = frame_counter / float(delta)
-                print("{} fps".format(framerate))
+                logger.info("{} fps".format(framerate))
 
             counter_start_time = datetime.now()
             frame_counter = 0
