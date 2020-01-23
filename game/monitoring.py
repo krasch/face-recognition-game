@@ -8,20 +8,17 @@ import logging
 import numpy as np
 
 MONITORING_PATH = Path("monitoring")
-MONITORING_PATH.mkdir(exist_ok=True)
-
-HISTORY_LENGTH = 10
 
 
 def calculate_runtime_in_seconds(start, end):
     delta = end - start
-    return delta.seconds + delta.microseconds /1000.0 / 1000.0
+    return delta.seconds + delta.microseconds / 1000.0 / 1000.0
 
 
 def monitor_runtime(f):
     logger = logging.getLogger(f.__name__)
     logger_avg = logging.getLogger(f.__name__+"_avg")
-    history = deque(maxlen=HISTORY_LENGTH)
+    history = deque(maxlen=10)
     counter = 0
 
     @wraps(f)
@@ -48,24 +45,23 @@ def monitor_runtime(f):
 
 class ProbabilitiesMonitor:
     def __init__(self):
-        self._storage_counter = 0
-        self._file_counter = 0
         self.data = []
 
     def add(self, matches):
-        matches = matches[:100]
         matches = [(str(m.face.id), m.distance) for m in matches]
         self.data.append((datetime.now(), matches))
 
-        if self._storage_counter % 10000 == 0:
+        if len(self.data) == 10:
             self.store()
-            self._storage_counter = 0
             self.data = []
 
     def store(self):
-        file = (MONITORING_PATH / "probabilities_{}".format(self._file_counter)).with_suffix(".pkl")
-        self._file_counter += 1
+        now = datetime.now()
 
+        directory = MONITORING_PATH / now.strftime("%Y%m%d-%H")
+        directory.mkdir(exist_ok=True, parents=True)
+
+        file = directory / (now.strftime("%Y%m%d-%H%M%S.%f") + ".pkl")
         with file.open("wb") as f:
             pickle.dump(self.data, f)
 

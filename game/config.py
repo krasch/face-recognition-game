@@ -1,5 +1,4 @@
 from pathlib import Path
-from threading import Lock
 from collections import MutableMapping
 from copy import deepcopy
 
@@ -9,26 +8,21 @@ import yaml
 class Config(MutableMapping):
     """
     Config that behaves exactly like a (read-only) dictionary, but that can be re-read from file if necessary, in a
-    thread-sage manner
+    thread-safe manner
     """
     config = None
 
     def __init__(self, config_file):
         self.config_file = Path(config_file)
-        # self._lock = Lock()
         self.reload()
 
     def __getitem__(self, key):
-        #self._lock.acquire()
         value = self.config[key]
-        #self._lock.release()
         return value
 
     def reload(self):
         print("Reloading config")
-        #self._lock.acquire()
         self.config = yaml.safe_load(self.config_file.read_text())
-        #self._lock.release()
 
     def toggle_debug(self):
         config_copy = deepcopy(self.config)
