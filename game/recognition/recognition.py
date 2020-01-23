@@ -1,18 +1,17 @@
 from multiprocessing import Process
 from contextlib import contextmanager
-import time
 from abc import abstractmethod
 
 import numpy as np
 import cv2
 
-from face_recognition_live.config import CONFIG
-from face_recognition_live.events.tasks import *
-from face_recognition_live.events.results import *
-from face_recognition_live.database import FaceDatabase
-from face_recognition_live.recognition.models import init_model_stack
-from face_recognition_live.recognition.face import Face
-from face_recognition_live.monitoring import monitor_runtime
+from game.config import CONFIG
+from game.events.tasks import *
+from game.events.results import *
+from game.database import FaceDatabase
+from game.recognition.models import init_model_stack
+from game.recognition.face import Face
+from game.monitoring import monitor_runtime
 
 
 class WorkerProcess(Process):

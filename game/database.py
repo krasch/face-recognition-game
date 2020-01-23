@@ -4,7 +4,7 @@ import datetime
 import pickle
 from pathlib import Path
 
-from face_recognition_live.monitoring import monitor_runtime
+from game.monitoring import monitor_runtime
 
 
 class StoredFace:

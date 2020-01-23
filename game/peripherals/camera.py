@@ -5,8 +5,8 @@ from datetime import datetime
 import cv2
 import numpy as np
 
-from face_recognition_live.events.results import CameraImage
-from face_recognition_live.config import CONFIG
+from game.events.results import CameraImage
+from game.config import CONFIG
 
 
 def init_jetson_video_capture():

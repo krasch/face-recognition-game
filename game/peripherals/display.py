@@ -3,12 +3,12 @@ from contextlib import contextmanager
 import cv2
 import numpy as np
 
-from face_recognition_live.config import CONFIG
-from face_recognition_live.recognition.models.matching import MatchQuality
-from face_recognition_live.recognition.models.landmarks import DLIB68_FACE_LOCATIONS
-from face_recognition_live.events.results import RegistrationResult, UnregistrationResult
-from face_recognition_live.peripherals.display_utils import *
-from face_recognition_live.monitoring import monitor_runtime
+from game.config import CONFIG
+from game.recognition.models.matching import MatchQuality
+from game.recognition.models.landmarks import DLIB68_FACE_LOCATIONS
+from game.events.results import RegistrationResult, UnregistrationResult
+from game.peripherals.display_utils import *
+from game.monitoring import monitor_runtime
 
 # BGR
 RED = (0, 0, 255)

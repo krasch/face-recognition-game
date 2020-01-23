@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from face_recognition_live.monitoring import monitor_runtime
+from game.monitoring import monitor_runtime
 
 
 WHITE = (255, 255, 255)
