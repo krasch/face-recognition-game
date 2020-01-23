@@ -1,6 +1,11 @@
-Based on https://medium.com/@ageitgey/build-a-hardware-based-face-recognition-system-for-150-with-the-nvidia-jetson-nano-and-python-a25cb8c891fd
+WORK IN PROCESS - MORE INFO HERE SOON
 
-# Installation
+# About
+
+Please see [https://krasch.io/projects/face_recognition_game/](https://krasch.io/projects/face_recognition_game/).
+
+
+# Installation (incomplete)
 
 Python >= 3.7
 
@@ -17,8 +22,4 @@ python main.py
 ```
 
 
-# Notes
-
-CNN face detection does not properly run in thread on my laptop
-
-# known issues
+![BMBF logo](BMBF_gefoerdert_2017_en.png =200x)
