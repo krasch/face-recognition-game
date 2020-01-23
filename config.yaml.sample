@@ -1,0 +1,90 @@
+###################################################################################################
+# LIVE RELOAD INFO
+# Items marked as "live-reload" can be changed while the program is running. Simply save the updated config, the
+# program will automatically pick up the new values.
+# For all other items, you need to restart the program for the new config values to get into effect.
+###################################################################################################
+
+
+# Which image source to use; following settings are supported:
+# camera        -> use built-in or USB camera
+# camera_jetson -> use when running on jetson with raspberry pi camera, will use gstreamer
+# prerecorded   -> run on video file or collection of images
+source: camera
+
+source_settings:
+  # whether camera image should be displayed mirrored, best to keep this to true (because otherwise confusing to user)
+  mirror: true
+
+  # only used if source = camera_jetson
+  camera_jetson:
+    width: 1280
+    height: 720
+    flip: 0
+    zoom: 1.00
+    framerate: 25
+
+  # only used if source = camera
+  camera:
+    # which camera to use, try -1, 0, 1, etc till it works
+    location: 0
+
+  # only used with source=prerecorded
+  prerecorded:
+    # can be a video file or a sequence of images
+    location: tests/data/%d.png
+    # location: tests/data/somevideo.webm
+
+
+recognition:
+  models:
+     # location of the models, as downloaded by download_models.sh
+     directory: "models"
+     # which collection of models to use (CNN+dlibcrop+openface+dot or HOG+dlibcrop+openface+dot)
+     stack: "CNN+dlibcrop+openface+dot"
+
+     face_detection:
+       # best to scale image before giving to face detection, otherwise to slow; live-reload
+       scale: 0.5
+       # only keep the largest x detected faces; live-reload
+       max_num_faces: 5
+
+     matching:
+       # if distance <= excellent_match_cutoff -> 3 star match, live-reload
+       excellent_match_cutoff: 0.2
+       # if distance <= good_match_cutoff -> 2 star match, live-reload
+       good_match_cutoff: 0.4
+       # if distance <= poor_match_cutoff -> 1 star match, live-reload
+       poor_match_cutoff: 0.6
+
+  database:
+     # file where face database will be backed-up
+     location: "database.pkl"
+     # how often to back up face database, every x frames; live-reload
+     backup_frequency: 100
+
+display:
+  # if true: display frame numbers and match distances; live-reload
+  debug: true
+
+  # best if this matches camera aspect ratio, better not larger than 1280x720 (display routine too slow)
+  width: 1280
+  height: 720
+  fullscreen: false
+
+  # how large match-bubbles should be (in pixels); live-reload
+  thumbnail_size: 75
+  # how large stars should be (in pixels); live-reload
+  stars_height: 20
+  # how many match-bubbles to display; live-reload
+  num_matches: 3
+  # how many match-bubbles to display in debug mode; live-reload
+  num_matches_debug: 5
+
+  # if face recognition are older than x milliseconds, consider them outdated and no longer display them
+  max_age_recognition_result: 1000
+  # if person(s) have been registered longer than x milliseconds ago, no longer display the "New registered" info
+  display_time_registration_result: 3000
+
+
+

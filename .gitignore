@@ -3,6 +3,7 @@ __pycache__
 ./models
 *.swp
 tests
+config.yaml
 .ipynb_checkpoints/
 database*pkl
 models

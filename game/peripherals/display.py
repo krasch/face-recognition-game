@@ -146,11 +146,11 @@ def add_registration_info(frame, registration_result):
     y_text = height - BUFFER - thumbnail_size - DIST_BOX_THUMBNAIL * 2  # seems arbitrary
 
     if isinstance(registration_result, RegistrationResult):
-        text_positive = "Neu registriert"
-        text_negative = "Niemand registiert :-("
+        text_positive = "Added"
+        text_negative = "Nobody added :-("
     else:
-        text_positive = "Entfernt:"
-        text_negative = "Niemand entfernt :-("
+        text_positive = "Removed:"
+        text_negative = "Nobody removed :-("
 
     if len(registration_result.persons) == 0:
         cv2.putText(frame, text_negative, (x + BUFFER, y_text), FONT, 0.5, WHITE, lineType=cv2.LINE_AA)
