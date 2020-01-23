@@ -162,13 +162,6 @@ def add_registration_info(frame, registration_result):
         add_thumbnail(frame, x, y, face, thumbnail_size)
 
 
-def store_data(image, recognition_result):
-    import pickle
-    if image.id == 85:
-        with open("tests/data/display_test/data.pkl", "wb") as f:
-            pickle.dump({"image": image, "recognition_result": recognition_result}, f)
-
-
 def extend_frame(frame):
     height, width, _ = frame.shape
     extended_frame = np.zeros((height + BUFFER*2, width+BUFFER*2, 4), np.uint8)
@@ -178,25 +171,6 @@ def extend_frame(frame):
 
 def reverse_frame_extension(frame):
     return frame[BUFFER:-BUFFER, BUFFER:-BUFFER, :]
-
-
-def add_black_bars(frame):
-    display_width = CONFIG["display"]["width"]
-    display_height = CONFIG["display"]["height"]
-
-    frame_height, frame_width, _ = frame.shape
-    if frame_height > display_height or frame_width > display_width:
-        raise NotImplementedError("Please lower screen resolution or increase camera resolution")
-
-    if frame_height == display_height and frame_width == display_width:
-        return frame
-
-    left = int(display_width / 2.0 - frame_width / 2.0)
-    top = int(display_height / 2 - frame_height / 2.0)
-    display_frame = np.zeros((display_height, display_width, 4), np.uint8)
-    display_frame[top: top + frame_height, left: left + frame_width, :] = frame
-
-    return display_frame
 
 
 @monitor_runtime
@@ -216,6 +190,5 @@ def show_frame(display, image, recognition_result, registration_info):
 
         frame = reverse_frame_extension(frame)
 
-    #frame = add_black_bars(frame)
     cv2.imshow(display, frame)
 

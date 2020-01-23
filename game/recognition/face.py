@@ -4,7 +4,6 @@ class Face:
         self.thumbnail = thumbnail
         self.landmarks = None
         self.crop = None
-        self.frontal = None
         self.features = None
         self.matches = None
         self.debug = {}

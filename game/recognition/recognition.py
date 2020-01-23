@@ -106,7 +106,6 @@ class RecognitionProcess(WorkerProcess):
     def _crop(self, rgb_image, faces):
         for face in faces:
             face.landmarks = self.models.find_landmarks(rgb_image, face.bounding_box)
-            face.frontal = self.models.is_frontal(face.bounding_box, face.landmarks)
             face.crop = self.models.crop(rgb_image, face.landmarks)
 
     @monitor_runtime

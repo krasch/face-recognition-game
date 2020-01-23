@@ -80,11 +80,10 @@ def game_loop():
                 image = event
 
                 # should start new recognition?
-                if image.id % CONFIG["recognition"]["framerate"] == 0:
-                    if not currently_recognizing:
-                        currently_recognizing = True
-                        image = CameraImage(image.id, image.data.copy())
-                        tasks.put(RecognizeFaces(image))
+                if not currently_recognizing:
+                    currently_recognizing = True
+                    image = CameraImage(image.id, image.data.copy())
+                    tasks.put(RecognizeFaces(image))
 
                 if image.id % CONFIG["recognition"]["database"]["backup_frequency"] == 0:
                     tasks.put(BackupFaceDatabase())
