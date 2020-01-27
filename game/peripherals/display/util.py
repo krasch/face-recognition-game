@@ -9,3 +9,4 @@ def copy_object_to_location(frame, object_to_copy, x, y, mask):
     new = object_to_copy[:, :, 0:3] * (1-mask)
     frame[y: y + object_height, x: x + object_width, 0:3] = original + new
 
+

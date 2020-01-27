@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
 
+from game.config import CONFIG
 from game.peripherals.display import WHITE
+from game.peripherals.display.util import copy_object_to_location
 
 
 def make_round_mask(diameter):
@@ -43,7 +45,7 @@ def init_thumbnail_cache():
     cache = {}
     thumbnail_size_used_in_cache = None
 
-    def get_thumbnail(person, thumbnail_size):
+    def get_thumbnail_f(person, thumbnail_size):
         nonlocal cache
 
         if thumbnail_size_used_in_cache is None or thumbnail_size_used_in_cache != thumbnail_size:
@@ -57,8 +59,17 @@ def init_thumbnail_cache():
 
         return cache[person.id]
 
-    return get_thumbnail
+    return get_thumbnail_f
 
 
+# init thumbnail and mask cache to avoid expense calculations
 get_thumbnail = init_thumbnail_cache()
 get_round_mask = init_masks_cache()
+
+
+def draw_thumbnail(frame, x, y, person):
+    thumbnail_size = CONFIG["display"]["thumbnail_size"]
+
+    thumbnail = get_thumbnail(person, thumbnail_size)
+    mask = make_round_mask(thumbnail_size)
+    copy_object_to_location(frame, thumbnail, x, y, mask)
