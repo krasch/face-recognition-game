@@ -65,7 +65,7 @@ recognition:
 
 display:
   # if true: display frame numbers and match distances; live-reload
-  debug: true
+  debug: false
 
   # best if this matches camera aspect ratio, better not larger than 1280x720 (display routine too slow)
   width: 1280
