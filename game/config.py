@@ -1,8 +1,13 @@
+import sys
 from pathlib import Path
-from collections import MutableMapping
 from copy import deepcopy
 
 import yaml
+
+if sys.version_info[:2] >= (3, 8):
+    from collections.abc import MutableMapping
+else:
+    from collections import MutableMapping
 
 
 class Config(MutableMapping):
