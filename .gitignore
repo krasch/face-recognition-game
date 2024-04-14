@@ -1,10 +1,9 @@
 .idea
 __pycache__
-./models
+/models
 *.swp
 tests
 config.yaml
 .ipynb_checkpoints/
 database*pkl
-models
 monitoring
